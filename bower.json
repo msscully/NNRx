@@ -1,0 +1,31 @@
+{
+  "name": "ang-reminders",
+  "version": "0.0.1",
+  "authors": [
+    "Mark Scully <mark.s.scully@gmail.com>"
+  ],
+  "description": "Angular reminders app",
+  "main": "scripts/app.js",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-mocks": "1.2.6",
+    "angular-resource": "1.2.6",
+    "angular-route": "1.2.6",
+    "angular-sanitize": "1.2.6",
+    "angular-scenario": "1.2.6",
+    "bootstrap": "~3.0.3",
+    "es5-shim": "~2.1.0",
+    "json3": "~3.2.6",
+    "angular-cookies": "~1.2.14",
+    "mobiscroll": "~2.9.5",
+    "angular-gestures": "~0.2.1"
+  }
+}

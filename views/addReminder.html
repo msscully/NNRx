@@ -1,0 +1,14 @@
+<div ng-controller="ReminderCtrl">
+  <form action="#" ng-submit="submitForm()">
+    Name: <input type="text" ng-model="reminder.name" required /><br />
+    Time: <input type="time" ng-model="reminder.time" required /><br />
+    Repeat: <select ng-model="reminder.freq" required >
+      <option value="daily">Daily</option>
+      <option value="semiDaily">Every Other Day</option>
+    </select>
+    <br />
+    Snooze: <input type="number" step="1" ng-model="reminder.snooze" required ngPattern="/\d+/"/><br />
+    <button type="submit" class="topcoat-button--large--cta">Save</button>
+    <button type="button" class="topcoat-button--large--quiet" hm-tap="back()">Cancel</button>
+  </form>
+</div>
