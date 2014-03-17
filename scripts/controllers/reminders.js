@@ -14,17 +14,22 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
     };
 
     $scope.submitForm = function() {
-        $scope.reminder.id = $scope.nextId();
-        reminders.push($scope.reminder);
+        if (scope.reminder.id) {
+            reminders[$scope.reminder.id-1] = $scope.reminder;
+        } else {
+            $scope.reminder.id = $scope.nextId();
+            reminders.push($scope.reminder);
+        }
+        self.addLocalNotification();
     };
 
     var addLocalNotification = function(reminder) {
         window.plugin.notification.local.add({
-            id:         1, // is converted to a string
-            title:      'Reminder',
-            message:    'Dont forget to buy some flowers.',
+            id:         reminder.id, // is converted to a string
+            title:      reminder.name,
+            message:    reminder.message,
             //repeat:     'weekly',
-            date:       new Date(now + 10*1000),
+            //date:       new Date(now + 10*1000),
             foreground: 'self.foreground',
             background: 'self.background'
         });
