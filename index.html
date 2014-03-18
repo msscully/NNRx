@@ -12,6 +12,7 @@
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css styles/vendor.css -->
     <!-- bower:css -->
+    <link rel="stylesheet" href="topcoat/css/icomatic.css" />
     <link rel="stylesheet" href="topcoat/css/topcoat-mobile-light.css" />
     <!-- endbower -->
     <!-- endbuild -->
@@ -19,14 +20,14 @@
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
   </head>
-  <body ng-app="angRemindersApp" ng-controller="MainCtrl">
+  <body>
     <!--[if lt IE 7]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
     <!-- Add your site or application content here -->
-    <div ng-include="'views/nav.html'"></div>
     <div class="container" ng-view=""></div>
+    <div ng-include="'views/footer.html'"</div>
 
     <!--[if lt IE 9]>
     <script src="bower_components/es5-shim/es5-shim.js"></script>

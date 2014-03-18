@@ -14,16 +14,16 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
     };
 
     $scope.submitForm = function() {
-        if (scope.reminder.id) {
+        if ($scope.reminder.id) {
             reminders[$scope.reminder.id-1] = $scope.reminder;
         } else {
             $scope.reminder.id = $scope.nextId();
             reminders.push($scope.reminder);
         }
-        self.addLocalNotification();
+        $scope.addLocalNotification();
     };
 
-    var addLocalNotification = function(reminder) {
+    $scope.addLocalNotification = function(reminder) {
         window.plugin.notification.local.add({
             id:         reminder.id, // is converted to a string
             title:      reminder.name,
@@ -35,11 +35,11 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
         });
     };
 
-    var foreground = function (id) {
-        alert('I WAS RUNNING ID='+id);
+    $scope.foreground = function (id) {
+        go('/addReminder');
     };
 
-    var background = function (id) {
+    $scope.background = function (id) {
         alert('I WAS IN THE BACKGROUND ID='+id);
     };
 

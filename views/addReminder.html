@@ -1,3 +1,14 @@
+<div class="topcoat-navigation-bar">
+    <div class="topcoat-navigation-bar__item left quarter">
+      <button class="topcoat-icon-button" hm-tap="back()">
+        <div class="icomatic">back</div>
+      </button>
+    </div>
+    <div class="topcoat-navigation-bar__item center half">
+        <h1 class="topcoat-navigation-bar__title">Reminder</h1>
+    </div>
+</div>
+
 <div ng-controller="ReminderCtrl">
   <form action="#" ng-submit="submitForm()">
     Name: <input type="text" class="topcoat-text-input" placeholder="Reminder name" ng-model="reminder.name" required /><br />
