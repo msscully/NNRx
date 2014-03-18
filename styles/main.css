@@ -165,3 +165,31 @@ body {
   font-size:11px;
   color:#bbb;
 }
+
+.strip-button-border {
+  background-color: inherit;
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+}
+
+.add-reminder-form {
+  margin: 2rem 1rem 1rem 1rem;
+}
+
+.add-reminder-form label {
+  display: block;
+  margin: 1rem;
+}
+
+#add-reminder-form-inputs {
+}
+
+#add-reminder-form-controls {
+  margin: 0 auto;
+  text-align: center;
+}
+
+#add-reminder-form-controls button {
+  display: inline-block;
+}

@@ -1,6 +1,6 @@
 <div class="topcoat-navigation-bar">
     <div class="topcoat-navigation-bar__item left quarter">
-      <button class="topcoat-icon-button" hm-tap="back()">
+      <button class="topcoat-icon-button--large strip-button-border" hm-tap="back()">
         <div class="icomatic">back</div>
       </button>
     </div>
@@ -10,17 +10,24 @@
 </div>
 
 <div ng-controller="ReminderCtrl">
-  <form action="#" ng-submit="submitForm()">
-    Name: <input type="text" class="topcoat-text-input" placeholder="Reminder name" ng-model="reminder.name" required /><br />
-    Time: <input type="time" ng-model="reminder.time" required /><br />
-    Repeat: <select ng-model="reminder.freq" required >
-      <option value="daily">Daily</option>
-      <option value="semiDaily">Every Other Day</option>
-    </select>
-    <br />
-    Snooze: <input type="number" step="1" ng-model="reminder.snooze" required ngPattern="/\d+/"/><br />
-    Message: <input type="text" class="topcoat-text-input" placeholder="Reminder text" ng-model="reminder.message" /><br />
-    <button type="submit" class="topcoat-button--large--cta">Save</button>
-    <button type="button" class="topcoat-button--large--quiet" hm-tap="back()">Cancel</button>
+  <form class="add-reminder-form" action="#" ng-submit="submitForm()">
+    <div id="add-reminder-form-inputs">
+      <label>Name: <input type="text" class="topcoat-text-input" placeholder="Reminder name" ng-model="reminder.name" required /></label>
+      <label>Time: <input type="time" ng-model="reminder.time" required /></label>
+      <label class="topcoat-radio-button">
+        Daily:
+        <input type="radio" ng-model="reminder.freq" value="daily">
+        <div class="topcoat-radio-button__checkmark"></div>
+        Every-other-day:
+        <input type="radio" ng-model="reminder.freq" value="semiDaily">
+        <div class="topcoat-radio-button__checkmark"></div>
+      </label>
+      <label>Snooze: <input type="number" step="1" ng-model="reminder.snooze" required ngPattern="/\d+/"/></label>
+      <label>Message: <input type="text" class="topcoat-text-input" placeholder="Reminder text" ng-model="reminder.message" /></label>
+    </div>
+    <div id="add-reminder-form-controls">
+      <button type="submit" class="topcoat-button--large--cta">Save</button>
+      <button type="button" class="topcoat-button--large--quiet" hm-tap="back()">Cancel</button>
+    </div>
   </form>
 </div>
