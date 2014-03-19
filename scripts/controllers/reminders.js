@@ -20,27 +20,41 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
             $scope.reminder.id = $scope.nextId();
             reminders.push($scope.reminder);
         }
-        $scope.addLocalNotification();
+        $scope.addLocalNotification($scope.reminder);
     };
 
     $scope.addLocalNotification = function(reminder) {
         window.plugin.notification.local.add({
-            id:         reminder.id, // is converted to a string
             title:      reminder.name,
             message:    reminder.message,
             //repeat:     'weekly',
             //date:       new Date(now + 10*1000),
-            foreground: 'self.foreground',
-            background: 'self.background'
+            //foreground: '$scope.foreground',
+            //background: '$scope.background'
         });
     };
 
+    $scope.alertDismissed = function() {
+        $location.url('/');
+    };
+
     $scope.foreground = function (id) {
-        go('/addReminder');
+        alert('I WAS IN THE FOREGROUND ID='+id);
+        navigator.notification.alert(
+            'You are the winner!',  // message
+            $scope.alertDismissed(),         // callback
+            'Game Over',            // title
+            'Done'                  // buttonName
+        );
     };
 
     $scope.background = function (id) {
-        alert('I WAS IN THE BACKGROUND ID='+id);
+        navigator.notification.alert(
+            'You are the winner!',  // message
+            $scope.alertDismissed(),         // callback
+            'Game Over',            // title
+            'Done'                  // buttonName
+        );
     };
 
     $scope.$watch('reminders', function (newValue, oldValue) {
