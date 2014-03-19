@@ -17,14 +17,13 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
         if ($scope.reminder.id) {
             reminders[$scope.reminder.id-1] = $scope.reminder;
         } else {
-            $scope.reminder.id = $scope.nextId();
+            $scope.reminder.id = $scope.addLocalNotification($scope.reminder);
             reminders.push($scope.reminder);
         }
-        $scope.addLocalNotification($scope.reminder);
     };
 
     $scope.addLocalNotification = function(reminder) {
-        window.plugin.notification.local.add({
+        return window.plugin.notification.local.add({
             title:      reminder.name,
             message:    reminder.message,
             //repeat:     'weekly',
