@@ -1,6 +1,6 @@
-app.controller('ReminderCtrl', function ($scope, $location, $routeParams, reminderStorage) {
+app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routeParams, reminderStorage) {
     'use strict';
-    var reminders = $scope.reminders = reminderStorage.get();
+    var reminders = $scope.reminders = reminderStorage.all();
 
     if ($routeParams.reminderId) {
         $scope.reminder = reminders[$routeParams.reminderId - 1];
@@ -17,7 +17,8 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
         if ($scope.reminder.id) {
             reminders[$scope.reminder.id-1] = $scope.reminder;
         } else {
-            $scope.reminder.id = $scope.addLocalNotification($scope.reminder);
+            $scope.reminder.id = $scope.nextId();
+            $scope.notificationId = $scope.addLocalNotification($scope.reminder);
             reminders.push($scope.reminder);
         }
     };
@@ -26,34 +27,10 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
         return window.plugin.notification.local.add({
             title:      reminder.name,
             message:    reminder.message,
+            json:       JSON.stringify({ id: reminder.id }),
             //repeat:     'weekly',
             //date:       new Date(now + 10*1000),
-            //foreground: '$scope.foreground',
-            //background: '$scope.background'
         });
-    };
-
-    $scope.alertDismissed = function() {
-        $location.url('/');
-    };
-
-    $scope.foreground = function (id) {
-        alert('I WAS IN THE FOREGROUND ID='+id);
-        navigator.notification.alert(
-            'You are the winner!',  // message
-            $scope.alertDismissed(),         // callback
-            'Game Over',            // title
-            'Done'                  // buttonName
-        );
-    };
-
-    $scope.background = function (id) {
-        navigator.notification.alert(
-            'You are the winner!',  // message
-            $scope.alertDismissed(),         // callback
-            'Game Over',            // title
-            'Done'                  // buttonName
-        );
     };
 
     $scope.$watch('reminders', function (newValue, oldValue) {
@@ -72,4 +49,34 @@ app.controller('ReminderCtrl', function ($scope, $location, $routeParams, remind
         return nextId;
     };
 
+    $scope.checkDelete = function() {
+        var confirmTitle = "Delete " + "\"" + $scope.reminder.name + "\"?";
+        navigator.notification.confirm(
+            "Are you sure? This can't be undone.",
+            $scope.deleteReminder,
+            confirmTitle,
+            ['Delete', 'Cancel']
+        );
+    };
+
+    $scope.deleteReminder = function(buttonIndex) {
+        if (buttonIndex === 1) {
+            $scope.reminder.name = $scope.reminder.notificationId;
+            $scope.idIsScheduled = false;
+            window.plugin.notification.local.isScheduled(
+                $scope.reminder.notificationId, 
+                function (isScheduled) {
+                    $scope.idIsScheduled = isscheduled;
+                });
+            var position = $scope.idIsScheduled;
+
+            if (idIsScheduled) {
+                window.plugin.notification.local.cancel($scope.reminder.notificationId);
+            }
+            if (position >= 0) {
+                reminders.splice(position,1);
+            }
+            $rootScope.back();
+        }
+    };
 });

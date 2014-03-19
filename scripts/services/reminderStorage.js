@@ -9,12 +9,17 @@ app.factory('reminderStorage', function () {
     var STORAGE_ID = 'reminders-nnrx';
 
     return {
-        get: function () {
+        all: function () {
             return JSON.parse(localStorage.getItem(STORAGE_ID) || '[]');
         },
 
         put: function (reminders) {
             localStorage.setItem(STORAGE_ID, JSON.stringify(reminders));
-        }
+        },
+
+        get: function(id) {
+            var reminders = JSON.parse(localStorage.getItem(STORAGE_ID) || '[]');
+            return reminders[id-1] || {};
+        },
     };
 });

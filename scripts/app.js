@@ -12,8 +12,7 @@ var onDeviceReady = function() {
     angular.bootstrap( document, ['angRemindersApp']);
 };
 
-document.addEventListener('deviceready', 
-                          onDeviceReady);
+document.addEventListener('deviceready', onDeviceReady);
 
 app.config(function ($routeProvider) {
     'use strict';
