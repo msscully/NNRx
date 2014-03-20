@@ -8,11 +8,6 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
         $scope.reminder = {name: '', time: '', freq: '', id: '', message: '', notificationId: ''};
     }
 
-    $scope.showScroller = function () {
-      $scope.scroller.call('setDate', new Date(), true, 5);
-      $scope.scroller.call('show');
-    };
-
     $scope.submitForm = function() {
         if ($scope.reminder.id) {
             reminders[$scope.reminder.id] = $scope.reminder;
@@ -28,9 +23,9 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             title:      reminder.name,
             message:    reminder.message,
             json:       JSON.stringify({ id: reminder.id }),
-            //repeat:     'weekly',
-            //date:       new Date(now + 10*1000),
+            date:       new Date(new Date().getTime() + 5*1000),
             autoCancel: true
+            //repeat:     'weekly',
         });
     };
 
@@ -61,21 +56,31 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
 
     $scope.deleteReminder = function(buttonIndex) {
         if (buttonIndex === 1) {
-            $scope.idIsScheduled = false;
-            window.plugin.notification.local.isScheduled(
-                $scope.reminder.notificationId, 
-                function (isScheduled) {
-                    $scope.idIsScheduled = isScheduled;
-                });
-
-            if ($scope.idIsScheduled) {
-                window.plugin.notification.local.cancel($scope.reminder.notificationId);
-            }
+            $scope.cancelReminder($scope.reminder.notificationId);
 
             delete reminders[$scope.reminder.id];
             reminderStorage.put(reminders);
-            $rootScope.back();
+            $location.path('/').replace();
+            $rootScope.$apply();
         }
+    };
+
+    $scope.cancelReminder = function(notificationId) {
+        $scope.idIsScheduled = false;
+        window.plugin.notification.local.isScheduled(
+            notificationId,
+            function (isScheduled) {
+                $scope.idIsScheduled = isScheduled;
+            });
+
+            if ($scope.idIsScheduled) {
+                window.plugin.notification.local.cancel(notificationId);
+            }
+    };
+
+    $scope.clearReminder = function(id) {
+        //TODO: implement when v0.8.x of notifications plugin is released.
+        window.plugin.notification.local.clear(id);
     };
 
     $rootScope.handleNotification = function(id, state, json) {
@@ -93,9 +98,20 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     };
 
     $rootScope.alertDismissed = function() {
-        $rootScope.go('/');
+        $location.path('/').replace();
+        $rootScope.$apply();
     };
 
+    $rootScope.handleTriggeredNotification = function(notificationId, state, json) {
+        if (state !== "background") {
+            $scope.clearReminder(notificationId);
+            $rootScope.handleNotification(notificationId, state, json);
+        }
+    };
+
+
     window.plugin.notification.local.onclick = $rootScope.handleNotification;
+
+    window.plugin.notification.local.ontrigger = $rootScope.handleTriggeredNotification;
 
 });
