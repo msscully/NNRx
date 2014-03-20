@@ -33,6 +33,10 @@ app.config(function ($routeProvider) {
       templateUrl: 'views/addReminder.html',
       controller: 'ReminderCtrl'
     })
+    .when('/about', {
+        templateUrl: 'views/about.html',
+        controller: 'MainCtrl'
+    })
     .otherwise({
         redirectTo: '/'
     });
