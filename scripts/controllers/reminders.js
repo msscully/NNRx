@@ -3,9 +3,9 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     var reminders = $scope.reminders = reminderStorage.all();
 
     if ($routeParams.reminderId) {
-        $scope.reminder = reminders[$routeParams.reminderId - 1];
+        $scope.reminder = reminders[$routeParams.reminderId];
     } else {
-        $scope.reminder = {name: '', time: '', freq: '', snooze: '', id:''};
+        $scope.reminder = {name: '', time: '', freq: '', snooze: '', id:'', notificationId: ''};
     }
 
     $scope.showScroller = function () {
@@ -15,11 +15,11 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
 
     $scope.submitForm = function() {
         if ($scope.reminder.id) {
-            reminders[$scope.reminder.id-1] = $scope.reminder;
+            reminders[$scope.reminder.id] = $scope.reminder;
         } else {
             $scope.reminder.id = $scope.nextId();
-            $scope.notificationId = $scope.addLocalNotification($scope.reminder);
-            reminders.push($scope.reminder);
+            $scope.reminder.notificationId = $scope.addLocalNotification($scope.reminder);
+            reminders[$scope.reminder.id] = $scope.reminder;
         }
     };
 
@@ -41,10 +41,9 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
 
     $scope.nextId = function () {
         var nextId = 0;
-        if (reminders.length === 0) {
-            nextId = 1;
-        } else {
-            nextId = reminders[reminders.length-1].id + 1;
+        var remindersKeys = Object.keys(reminders);
+        if (remindersKeys.length > 0) {
+            nextId = remindersKeys[reminders.length-1] + 1;
         }
         return nextId;
     };
@@ -61,21 +60,18 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
 
     $scope.deleteReminder = function(buttonIndex) {
         if (buttonIndex === 1) {
-            $scope.reminder.name = $scope.reminder.notificationId;
             $scope.idIsScheduled = false;
             window.plugin.notification.local.isScheduled(
                 $scope.reminder.notificationId, 
                 function (isScheduled) {
-                    $scope.idIsScheduled = isscheduled;
+                    $scope.idIsScheduled = isScheduled;
                 });
-            var position = $scope.idIsScheduled;
 
-            if (idIsScheduled) {
+            if ($scope.idIsScheduled) {
                 window.plugin.notification.local.cancel($scope.reminder.notificationId);
             }
-            if (position >= 0) {
-                reminders.splice(position,1);
-            }
+
+            delete reminders[$scope.reminder.id];
             $rootScope.back();
         }
     };

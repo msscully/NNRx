@@ -10,7 +10,7 @@ app.factory('reminderStorage', function () {
 
     return {
         all: function () {
-            return JSON.parse(localStorage.getItem(STORAGE_ID) || '[]');
+            return JSON.parse(localStorage.getItem(STORAGE_ID) || '{}');
         },
 
         put: function (reminders) {
@@ -18,8 +18,8 @@ app.factory('reminderStorage', function () {
         },
 
         get: function(id) {
-            var reminders = JSON.parse(localStorage.getItem(STORAGE_ID) || '[]');
-            return reminders[id-1] || {};
+            var reminders = JSON.parse(localStorage.getItem(STORAGE_ID) || '{}');
+            return reminders[id] || {};
         },
     };
 });
