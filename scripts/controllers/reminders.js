@@ -19,11 +19,16 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     };
 
     $scope.addLocalNotification = function(reminder) {
+        var reminderDate = new Date();
+        var reminderTimeSplit = reminder.time.split(':');
+        reminderDate.setHours(reminderTimeSplit[0]);
+        reminderDate.setMinutes(reminderTimeSplit[1]);
+
         return window.plugin.notification.local.add({
             title:      reminder.name,
             message:    reminder.message,
             json:       JSON.stringify({ id: reminder.id }),
-            date:       new Date(new Date().getTime() + 5*1000),
+            date:       reminderDate,
             autoCancel: true
             //repeat:     'weekly',
         });
