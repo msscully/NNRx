@@ -5,7 +5,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     if ($routeParams.reminderId) {
         $scope.reminder = reminders[$routeParams.reminderId];
     } else {
-        $scope.reminder = {name: '', time: '', freq: '', snooze: '', id:'', notificationId: ''};
+        $scope.reminder = {name: '', time: '', freq: '', id:'', notificationId: ''};
     }
 
     $scope.showScroller = function () {
@@ -43,7 +43,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
         var nextId = 0;
         var remindersKeys = Object.keys(reminders);
         if (remindersKeys.length > 0) {
-            nextId = remindersKeys[reminders.length-1] + 1;
+            nextId = parseInt(remindersKeys[remindersKeys.length-1]) + 1;
         }
         return nextId;
     };
@@ -72,6 +72,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             }
 
             delete reminders[$scope.reminder.id];
+            reminderStorage.put(reminders);
             $rootScope.back();
         }
     };
