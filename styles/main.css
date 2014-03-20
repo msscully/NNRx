@@ -192,3 +192,7 @@ body {
 #add-reminder-form-controls button {
   display: inline-block;
 }
+
+.add-reminder-button {
+  width: 100%;
+}

@@ -12,5 +12,4 @@ app.controller('MainCtrl', ['$scope', '$rootScope', '$window', '$location', func
         $location.url(path);
     };
 
-
  }]);
