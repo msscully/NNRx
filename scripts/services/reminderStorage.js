@@ -16,10 +16,5 @@ app.factory('reminderStorage', function () {
         put: function (reminders) {
             localStorage.setItem(STORAGE_ID, JSON.stringify(reminders));
         },
-
-        get: function(id) {
-            var reminders = JSON.parse(localStorage.getItem(STORAGE_ID) || '{}');
-            return reminders[id] || {};
-        },
     };
 });

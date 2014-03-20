@@ -5,7 +5,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     if ($routeParams.reminderId) {
         $scope.reminder = reminders[$routeParams.reminderId];
     } else {
-        $scope.reminder = {name: '', time: '', freq: '', id:'', notificationId: ''};
+        $scope.reminder = {name: '', time: '', freq: '', id: '', message: '', notificationId: ''};
     }
 
     $scope.showScroller = function () {
@@ -30,6 +30,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             json:       JSON.stringify({ id: reminder.id }),
             //repeat:     'weekly',
             //date:       new Date(now + 10*1000),
+            autoCancel: true
         });
     };
 
@@ -76,4 +77,25 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             $rootScope.back();
         }
     };
+
+    $rootScope.handleNotification = function(id, state, json) {
+        var reminderId = JSON.parse(json).id;
+        var reminder = reminders[reminderId];
+        if (!reminder.message) {
+            reminder.message = "This message intentionally left blank.";
+        }
+        navigator.notification.alert(
+            reminder.message,  // message
+            $rootScope.alertDismissed,         // callback
+            reminder.name,            // title
+            'Dismiss'                  // buttonName
+        );
+    };
+
+    $rootScope.alertDismissed = function() {
+        $rootScope.go('/');
+    };
+
+    window.plugin.notification.local.onclick = $rootScope.handleNotification;
+
 });
