@@ -21,17 +21,17 @@
       <label>Time: <input type="time" ng-model="reminder.time" required /></label>
       <label class="topcoat-radio-button">
         Daily:
-        <input type="radio" ng-model="reminder.freq" value="daily">
+        <input type="radio" ng-model="reminder.freq" value="daily" required >
         <div class="topcoat-radio-button__checkmark"></div>
         Every-other-day:
-        <input type="radio" ng-model="reminder.freq" value="semiDaily">
+        <input type="radio" ng-model="reminder.freq" value="semiDaily" >
         <div class="topcoat-radio-button__checkmark"></div>
       </label>
       <label>Message: <input type="text" class="topcoat-text-input" placeholder="Reminder text" ng-model="reminder.message" /></label>
     </div>
     <div id="add-reminder-form-controls">
       <button type="submit" class="topcoat-button--large--cta">Save</button>
-      <button type="button" class="topcoat-button--large--quiet" hm-tap="back()">Cancel</button>
+      <button type="reset" class="topcoat-button--large--quiet" hm-tap="back()">Cancel</button>
       <button type="button" class="topcoat-button--large" hm-tap="checkDelete()">Delete</button>
     </div>
   </form>
