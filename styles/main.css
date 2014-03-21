@@ -197,3 +197,14 @@ body {
   width: 100%;
   border-radius: 0px;
 }
+
+.edit-reminder-button, .delete-reminder-button {
+  width: 50%;
+  border-radius: 0px;
+  float: left;
+}
+
+.delete-reminder-button {
+  background-color: red;
+  clear: right;
+}

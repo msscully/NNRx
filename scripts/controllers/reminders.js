@@ -4,8 +4,10 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
 
     if ($routeParams.reminderId) {
         $scope.reminder = reminders[$routeParams.reminderId];
+        $scope.editing = true;
     } else {
         $scope.reminder = {name: '', time: '', freq: '', id: '', message: '', notificationId: ''};
+        $scope.editing = false;
     }
 
     $scope.submitForm = function() {

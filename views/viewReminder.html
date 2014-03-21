@@ -1,0 +1,24 @@
+<div class="topcoat-navigation-bar">
+  <div class="topcoat-navigation-bar__item left quarter">
+    <button class="topcoat-icon-button--large strip-button-border" ng-click="back()">
+      <div class="icomatic">back</div>
+    </button>
+  </div>
+  <div class="topcoat-navigation-bar__item center half">
+    <h1 class="topcoat-navigation-bar__title">Reminder</h1>
+  </div>
+  <div ng-controller="MainCtrl" class="topcoat-navigation-bar__item right quarter">
+    <button class="topcoat-icon-button--large strip-button-border" ng-click="go('/about')">
+      <div class="icomatic">question</div>
+    </button>
+  </div>
+</div>
+
+<button class="topcoat-button--cta edit-reminder-button" ng-click="go('/reminders/' + reminder.id + '/edit')" ng-show="editing" ng-cloak >Edit</button>
+<button class="topcoat-button--cta delete-reminder-button" ng-click="checkDelete()" ng-show="editing" ng-cloak >Delete</button>
+
+<div ng-cloak>
+  <h2> {{reminder.name}} </h2>
+  <h3> {{reminder.message}} </h3>
+  <p>Occurs {{reminder.freq}} at {{reminder.time}}</p>
+</div>

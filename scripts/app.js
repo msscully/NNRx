@@ -29,6 +29,10 @@ app.config(function ($routeProvider) {
         controller: 'ReminderCtrl'
     })
     .when('/reminders/:reminderId', {
+      templateUrl: 'views/viewReminder.html',
+      controller: 'ReminderCtrl'
+    })
+    .when('/reminders/:reminderId/edit', {
       templateUrl: 'views/addReminder.html',
       controller: 'ReminderCtrl'
     })
