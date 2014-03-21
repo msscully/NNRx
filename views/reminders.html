@@ -10,9 +10,9 @@
     </button>
   </div>
 </div>
-<button class="topcoat-button--cta add-reminder-button" ng-click="go('/addReminder')">Add Reminder</button>
+<button class="topcoat-button--cta add-reminder-button" ng-click="go('/addReminder')">Schedule Event</button>
 <div class="topcoat-list">
-  <h3 class="topcoat-list__header">Reminders</h3>
+  <h3 class="topcoat-list__header">Events</h3>
   <div class="reminder row" ng-repeat="(reminderId, reminder) in reminders">
     <ul class="topcoat-list__container">
       <li class="topcoat-list__item" ng-click="go('/reminders/' + reminder.id)">
