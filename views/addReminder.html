@@ -14,6 +14,8 @@
   </div>
 </div>
 
+<button class="topcoat-button--cta delete-reminder-button" ng-click="checkDelete()" ng-show="editing" ng-cloak >Delete</button>
+
 <div ng-controller="ReminderCtrl" ng-cloak>
   <form class="add-reminder-form" action="#" ng-submit="submitForm()">
     <div id="add-reminder-form-inputs">
@@ -30,8 +32,8 @@
       </label>
     </div>
     <div id="add-reminder-form-controls">
-      <button type="submit" class="topcoat-button--large--cta">Save</button>
-      <button type="reset" class="topcoat-button--large--quiet" ng-click="back()">Cancel</button>
+      <button type="submit" class="topcoat-button--cta save-reminder-button">Save</button>
+      <button type="reset" class="topcoat-button--cta cancel-reminder-button" ng-click="back()">Cancel</button>
     </div>
   </form>
 </div>

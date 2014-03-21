@@ -198,15 +198,23 @@ body {
   border-radius: 0px;
 }
 
-.edit-reminder-button, .delete-reminder-button {
+.edit-reminder-button, 
+.save-reminder-button,
+.cancel-reminder-button {
   width: 50%;
   border-radius: 0px;
   float: left;
 }
 
-.delete-reminder-button {
+.delete-reminder-button,
+.cancel-reminder-button {
   background-color: red;
   clear: right;
+}
+
+.delete-reminder-button {
+  width: 100%;
+  border-radius: 0px;
 }
 
 .add-reminder-text-input {
