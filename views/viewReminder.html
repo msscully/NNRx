@@ -20,5 +20,5 @@
 <div ng-cloak>
   <h2> {{reminder.name}} </h2>
   <h3> {{reminder.message}} </h3>
-  <p>Occurs {{reminder.freq}} at {{reminder.time}}</p>
+  <p>Occurs {{reminder.freq}} at {{reminder.time | timeFilter}}</p>
 </div>

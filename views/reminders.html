@@ -20,7 +20,7 @@
         {{ reminder.name }}
       </div>
       <div class="reminder-list__info">
-        {{ reminder.time }}
+        {{ reminder.time | timeFilter }}
         {{ reminder.freq }}
         {{ reminder.snooze }}
       </div>
