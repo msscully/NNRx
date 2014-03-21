@@ -3,7 +3,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     var reminders = $scope.reminders = reminderStorage.all();
 
     if ($routeParams.reminderId) {
-        $scope.reminder = reminders[$routeParams.reminderId];
+        $scope.reminder = angular.copy(reminders[$routeParams.reminderId]);
         $scope.editing = true;
     } else {
         $scope.reminder = {name: '', time: '', freq: '', id: '', message: '', notificationId: ''};
@@ -11,7 +11,9 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     }
 
     $scope.submitForm = function() {
-        if ($scope.reminder.id) {
+        if ($scope.reminder.notificationId) {
+            $scope.cancelReminder($scope.reminder.notificationId);
+            $scope.reminder.notificationId = $scope.addLocalNotification($scope.reminder);
             reminders[$scope.reminder.id] = $scope.reminder;
         } else {
             $scope.reminder.id = $scope.nextId();
@@ -54,7 +56,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     $scope.checkDelete = function() {
         var confirmTitle = "Delete " + "\"" + $scope.reminder.name + "\"?";
         navigator.notification.confirm(
-            "Are you sure? This can't be undone.",
+            "Are you sure? This will delete all future reminders for this event and can't be undone.",
             $scope.deleteReminder,
             confirmTitle,
             ['Delete', 'Cancel']
