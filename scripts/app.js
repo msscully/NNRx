@@ -5,7 +5,6 @@ var app = angular.module('angRemindersApp', [
     'ngResource',
     'ngSanitize',
     'ngRoute',
-    'angular-gestures'
 ]);
 
 var onDeviceReady = function() {
@@ -40,4 +39,8 @@ app.config(function ($routeProvider) {
     .otherwise({
         redirectTo: '/'
     });
+});
+
+app.run(function() {
+  FastClick.attach(document.body);
 });

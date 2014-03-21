@@ -1,6 +1,6 @@
 <div class="topcoat-navigation-bar">
   <div class="topcoat-navigation-bar__item left quarter">
-    <button class="topcoat-icon-button--large strip-button-border" hm-tap="back()">
+    <button class="topcoat-icon-button--large strip-button-border" ng-click="back()">
       <div class="icomatic">back</div>
     </button>
   </div>
@@ -8,13 +8,13 @@
     <h1 class="topcoat-navigation-bar__title">Reminder</h1>
   </div>
   <div ng-controller="MainCtrl" class="topcoat-navigation-bar__item right quarter">
-    <button class="topcoat-icon-button--large strip-button-border" hm-tap="go('/about')">
+    <button class="topcoat-icon-button--large strip-button-border" ng-click="go('/about')">
       <div class="icomatic">question</div>
     </button>
   </div>
 </div>
 
-<div ng-controller="ReminderCtrl">
+<div ng-controller="ReminderCtrl" ng-cloak>
   <form class="add-reminder-form" action="#" ng-submit="submitForm()">
     <div id="add-reminder-form-inputs">
       <label>Name: <input type="text" class="topcoat-text-input" placeholder="Reminder name" ng-model="reminder.name" required /></label>
@@ -31,8 +31,8 @@
     </div>
     <div id="add-reminder-form-controls">
       <button type="submit" class="topcoat-button--large--cta">Save</button>
-      <button type="reset" class="topcoat-button--large--quiet" hm-tap="back()">Cancel</button>
-      <button type="button" class="topcoat-button--large" hm-tap="checkDelete()">Delete</button>
+      <button type="reset" class="topcoat-button--large--quiet" ng-click="back()">Cancel</button>
+      <button type="button" class="topcoat-button--large" ng-click="checkDelete()">Delete</button>
     </div>
   </form>
 </div>
