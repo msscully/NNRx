@@ -7,7 +7,7 @@ app.filter('timeFilter', function() {
         var timeSuffix = 'AM';
 
         if ( inputHours > 11 ){
-            twelveHourTime = inputHours - 12;
+            inputHours = inputHours - 12;
             timeSuffix = 'PM';
         }
 
