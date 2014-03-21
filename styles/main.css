@@ -208,3 +208,8 @@ body {
   background-color: red;
   clear: right;
 }
+
+.add-reminder-text-input {
+  width: 100%;
+  display: block;
+}
