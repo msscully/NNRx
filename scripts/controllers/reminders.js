@@ -98,15 +98,27 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
         if (!reminder.message) {
             reminder.message = "This message intentionally left blank.";
         }
-        navigator.notification.alert(
+        navigator.notification.confirm(
             reminder.message,  // message
             $rootScope.alertDismissed,         // callback
             reminder.name,            // title
-            'Dismiss'                  // buttonName
+            ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
         );
     };
 
-    $rootScope.alertDismissed = function() {
+    $rootScope.alertDismissed = function(buttonIndex) {
+        if (buttonIndex === 3) {
+            // Snooze pressed, add one-time notification for 5min from now.
+            var reminder = angular.copy($scope.reminder);
+            var now = new Date().getTime();
+            var fiveMinInFuture = new Date(now + 300*1000);
+
+            console.log(JSON.stringify(reminder));
+            console.log("previous time: " + reminder.time);
+            reminder.time = fiveMinInFuture.getHours() + ":" + fiveMinInFuture.getMinutes();
+            console.log("in future: " + reminder.time);
+            $scope.addLocalNotification(reminder);
+        }
         $location.path('/').replace();
         $rootScope.$apply();
     };
