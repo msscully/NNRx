@@ -13,6 +13,27 @@ var onDeviceReady = function() {
 
 document.addEventListener('deviceready', onDeviceReady);
 
+app.config([
+    '$provide', function($provide) {
+    return $provide.decorator('$rootScope', [
+        '$delegate', function($delegate) {
+        $delegate.safeApply = function(fn) {
+            var phase = $delegate.$$phase;
+            if (phase === "$apply" || phase === "$digest") {
+                if (fn && typeof fn === 'function') {
+                    fn();
+                }
+            } else {
+                $delegate.$apply(fn);
+            }
+        };
+        return $delegate;
+    }
+    ]);
+}
+]);
+
+
 app.config(function ($routeProvider) {
     'use strict';
     $routeProvider
@@ -46,5 +67,5 @@ app.config(function ($routeProvider) {
 });
 
 app.run(function() {
-  FastClick.attach(document.body);
+    FastClick.attach(document.body);
 });

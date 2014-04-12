@@ -70,7 +70,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             delete reminders[$scope.reminder.id];
             reminderStorage.put(reminders);
             $location.path('/').replace();
-            $rootScope.$apply();
+            $rootScope.safeApply();
         }
     };
 
@@ -92,21 +92,23 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
         window.plugin.notification.local.clear(id);
     };
 
-    $rootScope.handleNotification = function(id, state, json) {
+    $scope.handleNotification = function(id, state, json) {
         var reminderId = JSON.parse(json).id;
-        var reminder = reminders[reminderId];
+        var reminder = $scope.reminder = reminders[reminderId];
         if (!reminder.message) {
             reminder.message = "This message intentionally left blank.";
         }
         navigator.notification.confirm(
             reminder.message,  // message
-            $rootScope.alertDismissed,         // callback
+            function(buttonIndex) {
+                $rootScope.safeApply($scope.alertDismissed(buttonIndex));
+            },         // callback
             reminder.name,            // title
             ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
         );
     };
 
-    $rootScope.alertDismissed = function(buttonIndex) {
+    $scope.alertDismissed = function(buttonIndex) {
         if (buttonIndex === 3) {
             // Snooze pressed, add one-time notification for 5min from now.
             var reminder = angular.copy($scope.reminder);
@@ -116,23 +118,28 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             console.log(JSON.stringify(reminder));
             console.log("previous time: " + reminder.time);
             reminder.time = fiveMinInFuture.getHours() + ":" + fiveMinInFuture.getMinutes();
+            reminder.repeat = null;
             console.log("in future: " + reminder.time);
             $scope.addLocalNotification(reminder);
         }
         $location.path('/').replace();
-        $rootScope.$apply();
+        $rootScope.safeApply();
     };
 
-    $rootScope.handleTriggeredNotification = function(notificationId, state, json) {
+    $scope.handleTriggeredNotification = function(notificationId, state, json) {
         if (state !== "background") {
             $scope.clearReminder(notificationId);
-            $rootScope.handleNotification(notificationId, state, json);
+            $scope.handleNotification(notificationId, state, json);
         }
     };
 
 
-    window.plugin.notification.local.onclick = $rootScope.handleNotification;
+    window.plugin.notification.local.onclick = function(id, state, json) {
+        $rootScope.safeApply($scope.handleNotification(id, state, json));
+    };
 
-    window.plugin.notification.local.ontrigger = $rootScope.handleTriggeredNotification;
+    window.plugin.notification.local.ontrigger = function(id, state, json) {
+        $rootScope.safeApply($scope.handleTriggeredNotification(id, state, json));
+    };
 
 });
