@@ -1,4 +1,4 @@
-app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routeParams, reminderStorage) {
+app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routeParams, reminderStorage, uuid4) {
     'use strict';
     var reminders = $scope.reminders = reminderStorage.all();
 
@@ -16,7 +16,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             $scope.reminder.notificationId = $scope.addLocalNotification($scope.reminder);
             reminders[$scope.reminder.id] = $scope.reminder;
         } else {
-            $scope.reminder.id = $scope.nextId();
+            $scope.reminder.id = uuid4.generate();
             $scope.reminder.notificationId = $scope.addLocalNotification($scope.reminder);
             reminders[$scope.reminder.id] = $scope.reminder;
         }
@@ -43,15 +43,6 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
             reminderStorage.put(reminders);
         }
     }, true);
-
-    $scope.nextId = function () {
-        var nextId = 0;
-        var remindersKeys = Object.keys(reminders);
-        if (remindersKeys.length > 0) {
-            nextId = parseInt(remindersKeys[remindersKeys.length-1]) + 1;
-        }
-        return nextId;
-    };
 
     $scope.checkDelete = function() {
         var confirmTitle = "Delete " + "\"" + $scope.reminder.name + "\"?";

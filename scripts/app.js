@@ -5,6 +5,7 @@ var app = angular.module('angRemindersApp', [
     'ngResource',
     'ngSanitize',
     'ngRoute',
+    'uuid4',
 ]);
 
 var onDeviceReady = function() {
