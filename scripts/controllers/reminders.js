@@ -1,4 +1,4 @@
-app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routeParams, reminderStorage, uuid4) {
+app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routeParams, reminderStorage, uuid4, $window) {
     'use strict';
     var reminders = $scope.reminders = reminderStorage.all();
 
@@ -28,7 +28,7 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
         reminderDate.setHours(reminderTimeSplit[0]);
         reminderDate.setMinutes(reminderTimeSplit[1]);
 
-        return window.plugin.notification.local.add({
+        return $window.plugin.notification.local.add({
             title:      reminder.name,
             message:    reminder.message,
             json:       JSON.stringify({ id: reminder.id }),
@@ -67,20 +67,20 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
 
     $scope.cancelReminder = function(notificationId) {
         $scope.idIsScheduled = false;
-        window.plugin.notification.local.isScheduled(
+        $window.plugin.notification.local.isScheduled(
             notificationId,
             function (isScheduled) {
                 $scope.idIsScheduled = isScheduled;
             });
 
             if ($scope.idIsScheduled) {
-                window.plugin.notification.local.cancel(notificationId);
+                $window.plugin.notification.local.cancel(notificationId);
             }
     };
 
     $scope.clearReminder = function(id) {
         //TODO: implement when v0.8.x of notifications plugin is released.
-        window.plugin.notification.local.clear(id);
+        $window.plugin.notification.local.clear(id);
     };
 
     $scope.handleNotification = function(id, state, json) {
@@ -125,11 +125,11 @@ app.controller('ReminderCtrl', function ($scope, $rootScope, $location, $routePa
     };
 
 
-    window.plugin.notification.local.onclick = function(id, state, json) {
+    $window.plugin.notification.local.onclick = function(id, state, json) {
         $rootScope.safeApply($scope.handleNotification(id, state, json));
     };
 
-    window.plugin.notification.local.ontrigger = function(id, state, json) {
+    $window.plugin.notification.local.ontrigger = function(id, state, json) {
         $rootScope.safeApply($scope.handleTriggeredNotification(id, state, json));
     };
 
