@@ -1,15 +1,16 @@
-app.controller('MainCtrl', ['$scope', '$rootScope', '$window', '$location', function ($scope, $rootScope, $window, $location, reminderStorage) {
+app.controller('MainCtrl', ['$scope', '$rootScope', '$window', '$location', 'reminderStorage', 'CordovaService', function ($scope, $rootScope, $window, $location, reminderStorage, CordovaService) {
     'use strict';
-    $scope.slide = '';
+    CordovaService.ready.then(function() {
+        $scope.slide = '';
 
-    $rootScope.back = function() {
-        $scope.slide = 'slide-right';
-        $window.history.back();
-    };
+        $rootScope.back = function() {
+            $scope.slide = 'slide-right';
+            $window.history.back();
+        };
 
-    $rootScope.go = function(path){
-        $scope.slide = 'slide-left';
-        $location.url(path);
-    };
-
- }]);
+        $rootScope.go = function(path){
+            $scope.slide = 'slide-left';
+            $location.url(path);
+        };
+    });
+}]);

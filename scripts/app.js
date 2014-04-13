@@ -6,13 +6,8 @@ var app = angular.module('angRemindersApp', [
     'ngSanitize',
     'ngRoute',
     'uuid4',
+    'fsCordova',
 ]);
-
-var onDeviceReady = function() {
-    angular.bootstrap( document, ['angRemindersApp']);
-};
-
-document.addEventListener('deviceready', onDeviceReady);
 
 app.config([
     '$provide', function($provide) {
@@ -34,6 +29,12 @@ app.config([
 }
 ]);
 
+// routing init deferred
+var $routeProviderReference;
+
+app.config(['$routeProvider', function($routeProvider) {
+  $routeProviderReference = $routeProvider;
+}]);
 
 app.config(function ($routeProvider) {
     'use strict';
@@ -67,6 +68,45 @@ app.config(function ($routeProvider) {
     });
 });
 
-app.run(function() {
-    FastClick.attach(document.body);
-});
+app.run(['$route', 'CordovaService', function($route, CordovaService) {
+
+    // when cordova is ready
+    // 'then' is a method of promise object (see fs-cordova.js)
+    CordovaService.ready.then(function() {
+        setupRoutes($route);
+        FastClick.attach(document.body);
+    });
+
+    function setupRoutes($route){
+        $routeProviderReference
+        .when('/', {
+            templateUrl: 'views/reminders.html',
+            controller: 'ReminderCtrl'
+        })
+        .when('/addReminder', {
+            templateUrl: 'views/addReminder.html',
+            controller: 'ReminderCtrl'
+        })
+        .when('/reminders/', {
+            templateUrl: 'views/addReminder.html',
+            controller: 'ReminderCtrl'
+        })
+        .when('/reminders/:reminderId', {
+            templateUrl: 'views/addReminder.html',
+            controller: 'ReminderCtrl'
+        })
+        .when('/reminders/:reminderId/edit', {
+            templateUrl: 'views/addReminder.html',
+            controller: 'ReminderCtrl'
+        })
+        .when('/about', {
+            templateUrl: 'views/about.html',
+            controller: 'MainCtrl'
+        })
+        .otherwise({
+            redirectTo: '/'
+        });
+
+        $route.reload();
+    }
+}]);
