@@ -1,4 +1,4 @@
-app.controller('ReminderCtrl', ['$scope', '$rootScope', '$location', '$routeParams', 'reminderStorage', 'uuid4', '$window', 'CordovaService', function ($scope, $rootScope, $location, $routeParams, reminderStorage, uuid4, $window, CordovaService) {
+app.controller('ReminderCtrl', ['$scope', '$rootScope', '$location', '$routeParams', 'reminderStorage', 'uuid4', '$window', 'CordovaService', 'localNotifications', function ($scope, $rootScope, $location, $routeParams, reminderStorage, uuid4, $window, CordovaService, localNotifications) {
     CordovaService.ready.then(function() {
         'use strict';
         
@@ -13,31 +13,41 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$location', '$routePara
         }
 
         $scope.submitForm = function() {
+            var reminderDate = new Date();
+            var reminderTimeSplit = $scope.reminder.time.split(':');
+            reminderDate.setHours(reminderTimeSplit[0]);
+            reminderDate.setMinutes(reminderTimeSplit[1]);
+            $scope.reminder.date = reminderDate;
             if ($scope.reminder.notificationId) {
-                $scope.cancelReminder($scope.reminder.notificationId);
-                $scope.reminder.notificationId = $scope.addLocalNotification($scope.reminder);
-                reminders[$scope.reminder.id] = $scope.reminder;
+                $scope.cancelReminder($scope.reminder.notificationId).then(
+                    $scope.addLocalNotification($scope.reminder).then(
+                        function(notificationId) {
+                            $scope.reminder.notificationId = notificationId;
+                            reminders[$scope.reminder.id] = $scope.reminder;
+                        }
+                ));
             } else {
                 $scope.reminder.id = uuid4.generate();
-                $scope.reminder.notificationId = $scope.addLocalNotification($scope.reminder);
-                reminders[$scope.reminder.id] = $scope.reminder;
+                $scope.addLocalNotification($scope.reminder).then(
+                    function(notificationId) {
+                        $scope.reminder.notificationId = notificationId;
+                        reminders[$scope.reminder.id] = $scope.reminder;
+                    }
+                );
             }
+            $scope.go('/');
         };
 
         $scope.addLocalNotification = function(reminder) {
-            var reminderDate = new Date();
-            var reminderTimeSplit = reminder.time.split(':');
-            reminderDate.setHours(reminderTimeSplit[0]);
-            reminderDate.setMinutes(reminderTimeSplit[1]);
 
-            return $window.plugin.notification.local.add({
+            return localNotifications.add({
                 title:      reminder.name,
                 message:    reminder.message,
                 json:       JSON.stringify({ id: reminder.id }),
-                date:       reminderDate,
-                autoCancel: true
-                //repeat:     'weekly',
-            });
+                date:       reminder.date,
+                autoCancel: true,
+                repeat:     'daily',
+            }).then(function(id) { return id; });
         };
 
         $scope.$watch('reminders', function (newValue, oldValue) {
@@ -58,31 +68,46 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$location', '$routePara
 
         $scope.deleteReminder = function(buttonIndex) {
             if (buttonIndex === 1) {
-                $scope.cancelReminder($scope.reminder.notificationId);
+                $scope.cancelReminder($scope.reminder.notificationId).then(
+                    function() {
 
-                delete reminders[$scope.reminder.id];
-                reminderStorage.put(reminders);
-                $location.path('/').replace();
-                $rootScope.safeApply();
+                        delete reminders[$scope.reminder.id];
+                        reminderStorage.put(reminders);
+                        $location.path('/').replace();
+                        $rootScope.safeApply();
+                   }
+                );
             }
         };
 
         $scope.cancelReminder = function(notificationId) {
-            $scope.idIsScheduled = false;
-            $window.plugin.notification.local.isScheduled(
-                notificationId,
-                function (isScheduled) {
-                    $scope.idIsScheduled = isScheduled;
-                });
-
-                if ($scope.idIsScheduled) {
-                    $window.plugin.notification.local.cancel(notificationId);
-                }
+            return localNotifications.cancel(notificationId);
         };
 
-        $scope.clearReminder = function(id) {
-            //TODO: implement when v0.8.x of notifications plugin is released.
-            $window.plugin.notification.local.clear(id);
+        $scope.clearReminder = function(id, json) {
+            //TODO: use localNotifications plugin clear function when v0.8.x
+            // of notifications plugin is released.
+            // $window.plugin.notification.local.clear(id);
+            // For now, cancel then re-add with date as tomorrow
+            var reminderId = JSON.parse(json).id;
+            var reminder = reminders[reminderId];
+            localNotifications.cancel(id).then( 
+                function() { 
+                    // add updated reminder
+                    var reminderDate = new Date();
+                    // new date should be today + 1 day with time set to reminder time
+                    reminderDate.setDate(reminderDate.getDate() + 1);
+                    var reminderTimeSplit = reminder.time.split(':');
+                    reminderDate.setHours(reminderTimeSplit[0]);
+                    reminderDate.setMinutes(reminderTimeSplit[1]);
+                    reminder.date = reminderDate;
+                    localNotifications.add(reminder).then(
+                        function(notificationId) {
+                            reminder.id = notificationId;
+                            reminders[reminderId] = reminder;
+                        }
+                    );
+                });
         };
 
         $scope.handleNotification = function(id, state, json) {
@@ -110,10 +135,11 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$location', '$routePara
 
                 console.log(JSON.stringify(reminder));
                 console.log("previous time: " + reminder.time);
+                reminder.date = fiveMinInFuture;
                 reminder.time = fiveMinInFuture.getHours() + ":" + fiveMinInFuture.getMinutes();
                 reminder.repeat = null;
                 console.log("in future: " + reminder.time);
-                $scope.addLocalNotification(reminder);
+                $scope.addLocalNotification(reminder).then(function(notificationId) {});
             }
             $location.path('/').replace();
             $rootScope.safeApply();
@@ -121,18 +147,25 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$location', '$routePara
 
         $scope.handleTriggeredNotification = function(notificationId, state, json) {
             if (state !== "background") {
-                $scope.clearReminder(notificationId);
                 $scope.handleNotification(notificationId, state, json);
+                $scope.clearReminder(notificationId, json);
             }
         };
 
 
-        $window.plugin.notification.local.onclick = function(id, state, json) {
-            $rootScope.safeApply($scope.handleNotification(id, state, json));
-        };
+        // Triggered when a local notification is clicked on
+        $scope.$on("localOnClick",
+                   function(event, data) { 
+                       $rootScope.safeApply($scope.handleNotification(data.id, data.state, data.json));
+                   });
 
-        $window.plugin.notification.local.ontrigger = function(id, state, json) {
-            $rootScope.safeApply($scope.handleTriggeredNotification(id, state, json));
-        };
+        // Triggered when a local notification is triggered. Used to detect if
+        // a notifcation occurs while the app is running, since iOS normally
+        // supresses them.
+        $scope.$on("localOnTrigger",
+                   function(event, data) {
+                       $scope.handleTriggeredNotification(data.id, data.state, data.json);
+                   });
+
     });
 }]);

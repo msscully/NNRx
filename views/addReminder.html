@@ -17,7 +17,7 @@
 <button class="topcoat-button--cta delete-reminder-button" ng-click="checkDelete()" ng-show="editing" ng-cloak >Delete</button>
 
 <div ng-controller="ReminderCtrl" ng-cloak>
-  <form class="add-reminder-form" action="#" ng-submit="submitForm()">
+  <form class="add-reminder-form" ng-submit="submitForm()">
     <div id="add-reminder-form-inputs">
       <label>Name: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder name" ng-model="reminder.name" required /></label>
       <label>Message: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder text" ng-model="reminder.message" /></label>
