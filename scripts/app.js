@@ -29,6 +29,19 @@ app.config([
 }
 ]);
 
+app.config(['$provide', function ($provide) {
+  $provide.decorator('$rootScope', function ($delegate) {
+    var _emit = $delegate.$emit;
+
+    $delegate.$emit = function () {
+      console.log.apply(console, arguments);
+      _emit.apply(this, arguments);
+    };
+
+    return $delegate;
+  });
+}]);
+
 // routing init deferred
 var $routeProviderReference;
 
@@ -43,7 +56,7 @@ app.config(function ($routeProvider) {
         templateUrl: 'views/reminders.html',
         controller: 'ReminderCtrl'
     })
-    .when('/addReminder', {
+    .when('/addReminder/', {
         templateUrl: 'views/addReminder.html',
         controller: 'ReminderCtrl'
     })
@@ -51,15 +64,15 @@ app.config(function ($routeProvider) {
         templateUrl: 'views/addReminder.html',
         controller: 'ReminderCtrl'
     })
-    .when('/reminders/:reminderId', {
+    .when('/reminders/:reminderId/', {
       templateUrl: 'views/addReminder.html',
       controller: 'ReminderCtrl'
     })
-    .when('/reminders/:reminderId/edit', {
+    .when('/reminders/:reminderId/edit/', {
       templateUrl: 'views/addReminder.html',
       controller: 'ReminderCtrl'
     })
-    .when('/about', {
+    .when('/about/', {
         templateUrl: 'views/about.html',
         controller: 'MainCtrl'
     })
