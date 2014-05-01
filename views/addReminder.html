@@ -21,13 +21,21 @@
     <div id="add-reminder-form-inputs">
       <label>Name: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder name" ng-model="reminder.name" required /></label>
       <label>Message: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder text" ng-model="reminder.message" /></label>
-      <label class="topcoat-radio-button">
+      <label>
         Schedule:
         <select ng-model="reminder.freq">
           <option value="semiDaily">Every-Other-Day</option>
           <option value="daily" selected>Daily</option>
           <option value="twiceDaily">Twice a Day</option>
         </select>
+      </label>
+      <label class="topcoat-radio-button" ng-show="reminder.freq == 'semiDaily'" ng-cloak>
+        Today:
+        <input type="radio" ng-model="reminder.tomorrow" value='False'/>
+        <div class="topcoat-radio-button__checkmark"></div>
+        Tomorrow:
+        <input type="radio" ng-model="reminder.tomorrow" value='True'/>
+        <div class="topcoat-radio-button__checkmark"></div>
       </label>
       <label>Time: <input type="time" ng-model="reminder.time" required /></label>
       <label ng-show="reminder.freq == 'twiceDaily'" ng-cloak>2nd Time: <input type="time" ng-model="reminder.secondTime" /></label>
