@@ -15,6 +15,12 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         $scope.submitForm = function() {
             var reminderDate = new Date();
             // if every-other-day are we supposed to start tomorrow?
+            if ($scope.reminder.freq === 'daily') {
+              $scope.reminder.secondTime = '';
+              $scope.reminder.tomorrow = 'false';
+              $scope.reminder.secondData = null;
+            }
+
             if ($scope.reminder.tomorrow === 'true') {
                 reminderDate.setDate(reminderDate.getDate() + 1);
             }
