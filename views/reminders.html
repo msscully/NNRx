@@ -17,7 +17,7 @@
     <ul class="topcoat-list__container">
       <li class="topcoat-list__item" ng-click="go('/reminders/' + reminder.id)">
       <div class="reminder-list__name">
-        {{ reminder.name | nameFilter }}
+        <strong>{{ reminder.name | nameFilter }}</strong>
       </div>
       <div class="reminder-list__info">
         {{ reminder.time | timeFilter }}
