@@ -32,7 +32,7 @@ app.service('localNotifications', ['$rootScope', '$q', 'CordovaService', '$windo
                     }
                 );
 
-                deferred.resolve(schduled);
+                deferred.resolve(scheduled);
             });
 
             return deferred.promise;
