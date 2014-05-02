@@ -212,6 +212,16 @@ body {
   clear: right;
 }
 
+.delete-reminder-button:active,
+.cancel-reminder-button:active {
+  background-color: red;
+}
+
+.delete-reminder-button:hover,
+.cancel-reminder-button:hover {
+  background-color: red;
+}
+
 .delete-reminder-button {
   width: 100%;
   border-radius: 0px;
