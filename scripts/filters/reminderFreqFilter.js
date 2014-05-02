@@ -5,7 +5,7 @@ app.filter('freqFilter', function() {
         if (inputFreq === 'daily') {
             outputFreq = 'Daily';
         } else if (inputFreq === 'semiDaily') {
-            outputFreq = 'Every-other-day';
+            outputFreq = 'Every-Other-Day';
         } else if (inputFreq === 'twiceDaily') {
             outputFreq = 'Twice Daily';
         }

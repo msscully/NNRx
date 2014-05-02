@@ -16,10 +16,16 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             var reminderDate = new Date();
             // if every-other-day are we supposed to start tomorrow?
             if ($scope.reminder.freq === 'daily') {
-              $scope.reminder.secondTime = '';
-              $scope.reminder.tomorrow = 'false';
-              $scope.reminder.secondData = null;
+                $scope.reminder.secondTime = '';
+                $scope.reminder.tomorrow = 'false';
+                $scope.reminder.secondDate = null;
+            } else if ($scope.reminder.freq === 'semiDaily') {
+                $scope.reminder.secondTime = '';
+                $scope.reminder.secondDate = null;
+            } else if ($scope.reminder.freq === 'twiceDaily') {
+                $scope.reminder.tomorrow = 'false';
             }
+
 
             if ($scope.reminder.tomorrow === 'true') {
                 reminderDate.setDate(reminderDate.getDate() + 1);
