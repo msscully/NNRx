@@ -8,14 +8,14 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             $scope.reminder = angular.copy(reminders[$routeParams.reminderId]);
             $scope.editing = true;
         } else {
-            $scope.reminder = {name: '', time: '', secondTime: '', freq: 'daily', id: '', message: '', notificationIds: []};
+            $scope.reminder = {name: '', time: '', secondTime: '', freq: 'daily', id: '', message: '', notificationIds: [], tomorrow: 'false'};
             $scope.editing = false;
         }
 
         $scope.submitForm = function() {
             var reminderDate = new Date();
             // if every-other-day are we supposed to start tomorrow?
-            if ($scope.reminder.tomorrow) {
+            if ($scope.reminder.tomorrow === 'true') {
                 reminderDate.setDate(reminderDate.getDate() + 1);
             }
             var reminderTimeSplit = $scope.reminder.time.split(':');
@@ -165,56 +165,61 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             var reminder = reminders[reminderId];
             $scope.cancelNotification(notificationId).then(
                 function() { 
-                    // add updated reminder
-                    var newNotification = {
-                        id:         uuid4.generate(),
-                        title:      reminder.name,
-                        message:    reminder.message,
-                        autoCancel: true,
-                    };
-                    var reminderDate = new Date();
-                    if (reminder.freq === 'daily' || reminder.freq === 'twiceDaily') {
-                        // new date should be today + 1 day with time set to reminder time
-                        reminderDate.setDate(reminderDate.getDate() + 1);
-                        newNotification.repeatInterval = 'daily';
-                    } else if (reminder.freq === 'semiDaily') {
-                        // new date is two days from now
-                        reminderDate.setDate(reminderDate.getDate() + 2);
-                        newNotification.repeatInterval = null;
-                    }
-                    var secondNotification = JSON.parse(json).second;
-                    var reminderTimeSplit;
-
-                    if (secondNotification) {
-                        reminderTimeSplit = reminder.secondTime.split(':');
-                        reminderDate.setHours(reminderTimeSplit[0]);
-                        reminderDate.setMinutes(reminderTimeSplit[1]);
-                        reminder.secondDate = reminderDate;
-                        newNotification.json=JSON.stringify({ id: notificationId, second: true});
-                        newNotification.date = reminder.secondDate;
-                    } else {
-                        reminderTimeSplit = reminder.time.split(':');
-                        reminderDate.setHours(reminderTimeSplit[0]);
-                        reminderDate.setMinutes(reminderTimeSplit[1]);
-                        reminder.date = reminderDate;
-                        newNotification.json=JSON.stringify({ id: notificationId, second: false});
-                        newNotification.date = reminder.date;
-                    }
-                    localNotifications.add(newNotification).then(
-                        function(newNotificationId) {
-                            var index = reminder.notificationIds.indexOf(notificationId);
-                            if (~index){
-                                reminder.notificationIds[index] = newNotificationId;
-                            } else {
-                                reminder.notificationIds.push(newNotificationId);
-                            }
-                            reminders[reminderId] = reminder;
+                    if (! JSON.parse(json).snooze) {
+                        // add updated reminder
+                        var newNotification = {
+                            id:         uuid4.generate(),
+                            title:      reminder.name,
+                            message:    reminder.message,
+                            autoCancel: true,
+                        };
+                        var reminderDate = new Date();
+                        if (reminder.freq === 'daily' || reminder.freq === 'twiceDaily') {
+                            // new date should be today + 1 day with time set to reminder time
+                            reminderDate.setDate(reminderDate.getDate() + 1);
+                            newNotification.repeatInterval = 'daily';
+                        } else if (reminder.freq === 'semiDaily') {
+                            // new date is two days from now
+                            reminderDate.setDate(reminderDate.getDate() + 2);
+                            newNotification.repeatInterval = null;
                         }
-                    );
+                        var secondNotification = JSON.parse(json).second;
+                        var reminderTimeSplit;
+
+                        if (secondNotification) {
+                            reminderTimeSplit = reminder.secondTime.split(':');
+                            reminderDate.setHours(reminderTimeSplit[0]);
+                            reminderDate.setMinutes(reminderTimeSplit[1]);
+                            reminder.secondDate = reminderDate;
+                            newNotification.json=JSON.stringify({ id: reminderId, second: true});
+                            newNotification.date = reminder.secondDate;
+                        } else {
+                            reminderTimeSplit = reminder.time.split(':');
+                            reminderDate.setHours(reminderTimeSplit[0]);
+                            reminderDate.setMinutes(reminderTimeSplit[1]);
+                            reminder.date = reminderDate;
+                            newNotification.json=JSON.stringify({ id: reminderId, second: false});
+                            newNotification.date = reminder.date;
+                        }
+                        localNotifications.add(newNotification).then(
+                            function(newNotificationId) {
+                                var index = reminder.notificationIds.indexOf(notificationId);
+                                if (~index){
+                                    reminder.notificationIds[index] = newNotificationId;
+                                } else {
+                                    reminder.notificationIds.push(newNotificationId);
+                                }
+                                reminders[reminderId] = reminder;
+                            }
+                        );
+                    } else {
+                        // We don't need to schedule a replacement for the
+                        // canceled notification
+                    }
             });
         };
 
-        $scope.handleNotification = function(id, state, json) {
+        $scope.handleNotification = function(notificationId, state, json) {
             var reminderId = JSON.parse(json).id;
             var reminder = $scope.reminder = reminders[reminderId];
             if (!reminder.message) {
@@ -224,24 +229,41 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                 reminder.message,  // message
                 reminder.name,            // title
                 ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
-            ).then($scope.alertDismissed);
+            ).then( function(buttonIndex) { $scope.alertDismissed(buttonIndex, notificationId, json); });
         };
 
-        $scope.alertDismissed = function(buttonIndex) {
+        $scope.alertDismissed = function(buttonIndex, notificationId, json) {
+            // Notifications are rescheduled the first time the alert is
+            // dismissed, even if they choose snooze. All snooze does is add a
+            // one time alert for 5 min from now. Snooze alerts are not
+            // re-added.
             if (buttonIndex === 3) {
                 // Snooze pressed, add one-time notification for 5min from now.
-                var reminder = angular.copy($scope.reminder);
                 var now = new Date().getTime();
                 var fiveMinInFuture = new Date(now + 300*1000);
+                var reminderId = JSON.parse(json).id;
+                var reminder = reminders[reminderId];
 
                 console.log(JSON.stringify(reminder));
-                console.log("previous time: " + reminder.time);
-                reminder.date = fiveMinInFuture;
-                reminder.time = fiveMinInFuture.getHours() + ":" + fiveMinInFuture.getMinutes();
-                reminder.repeat = null;
-                console.log("in future: " + reminder.time);
-                $scope.addLocalNotification(reminder).then(function(notificationId) {});
+                console.log("previous time: " + reminder.date);
+                console.log("in future: " + fiveMinInFuture.toUTCString());
+                var snoozeNotification = {
+                    id:         uuid4.generate(),
+                    title:      reminder.name,
+                    message:    reminder.message,
+                    date:       fiveMinInFuture,
+                    autoCancel: true,
+                    json:       JSON.stringify({ id: reminderId, second: JSON.parse(json).id, snooze: true}),
+                };
+
+                localNotifications.add(snoozeNotification).then(function(newNotificationId) {
+                    // Snooze is a one-time thing, so we don't need to track
+                    // this
+                });
             }
+            // Technically we don't have to clear notifications that were
+            // clicked on from outside the app, but it doesn't hurt anything.
+            $scope.clearNotification(notificationId, json);
             $location.path('/').replace();
             $rootScope.safeApply();
         };
@@ -249,7 +271,6 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         $scope.handleTriggeredNotification = function(notificationId, state, json) {
             if (state !== "background") {
                 $scope.handleNotification(notificationId, state, json);
-                $scope.clearNotification(notificationId, json);
             }
         };
 
