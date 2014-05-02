@@ -1,4 +1,4 @@
-app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$routeParams', 'reminderStorage', 'uuid4', '$window', 'CordovaService', 'localNotifications', function ($scope, $rootScope, $q, $location, $routeParams, reminderStorage, uuid4, $window, CordovaService, localNotifications) {
+app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$routeParams', 'reminderStorage', 'uuid4', '$window', 'CordovaService', 'localNotifications', 'dialogs', function ($scope, $rootScope, $q, $location, $routeParams, reminderStorage, uuid4, $window, CordovaService, localNotifications, dialogs) {
     CordovaService.ready.then(function() {
         'use strict';
         
@@ -22,14 +22,12 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             reminderDate.setHours(reminderTimeSplit[0]);
             reminderDate.setMinutes(reminderTimeSplit[1]);
             $scope.reminder.date = reminderDate;
-            console.log('firstDate: ' + reminderDate);
             if($scope.reminder.secondTime) {
                 var secondReminderDate = new Date();
                 reminderTimeSplit = $scope.reminder.secondTime.split(':');
                 secondReminderDate.setHours(reminderTimeSplit[0]);
                 secondReminderDate.setMinutes(reminderTimeSplit[1]);
                 $scope.reminder.secondDate = secondReminderDate;
-                console.log('secondDate: ' + secondReminderDate);
             }
 
             if ($scope.reminder.notificationIds.length > 0) {
@@ -86,7 +84,6 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                     autoCancel: true,
                     repeat:     repeatInterval,
                 };
-                console.log(r);
                 localNotifications.add(r).then(function(id) {  addId(id); });
             }
 
@@ -99,7 +96,6 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                 autoCancel: true,
                 repeat:     repeatInterval,
             };
-            console.log(r2);
             localNotifications.add(r2).then(function(id) {  addId(id); });
 
             return deferred.promise;
@@ -113,16 +109,14 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
         $scope.checkDelete = function() {
             var confirmTitle = "Delete " + "\"" + $scope.reminder.name + "\"?";
-            navigator.notification.confirm(
+            dialogs.confirm(
                 "Are you sure? This will delete all future reminders for this event and can't be undone.",
-                $rootScope.safeApply($scope.deleteReminder),
                 confirmTitle,
                 ['Delete', 'Cancel']
-            );
+            ).then($scope.deleteReminder);
         };
 
         $scope.deleteReminder = function(buttonIndex) {
-            console.log('$scope.reminder.title: ' + $scope.reminder.title);
             if (buttonIndex === 1) {
                 $scope.cancelReminder($scope.reminder).then(
                     function() {
@@ -192,14 +186,11 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             if (!reminder.message) {
                 reminder.message = "This message intentionally left blank.";
             }
-            navigator.notification.confirm(
+            dialogs.confirm(
                 reminder.message,  // message
-                function(buttonIndex) {
-                    $rootScope.safeApply($scope.alertDismissed(buttonIndex));
-                },         // callback
                 reminder.name,            // title
                 ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
-            );
+            ).then($scope.alertDismissed);
         };
 
         $scope.alertDismissed = function(buttonIndex) {

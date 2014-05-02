@@ -29,10 +29,9 @@ app.service('localNotifications', ['$rootScope', '$q', 'CordovaService', '$windo
                     notificationId,
                     function (isScheduled) {
                         scheduled = isScheduled;
+                        deferred.resolve(scheduled);
                     }
                 );
-
-                deferred.resolve(scheduled);
             });
 
             return deferred.promise;
@@ -41,24 +40,22 @@ app.service('localNotifications', ['$rootScope', '$q', 'CordovaService', '$windo
         cancel: function(notificationId) {
             var deferred = $q.defer();
 
+            var cancelFinished = function () {
+                deferred.resolve();
+            };
+
             CordovaService.ready.then(function() {
 
-                var scheduled;
                 $window.plugin.notification.local.isScheduled(
                     notificationId,
                     function (isScheduled) {
-                        scheduled = isScheduled;
+                        if(isScheduled) {
+                            $window.plugin.notification.local.cancel(notificationId, cancelFinished);
+                        } else {
+                            cancelFinished();
+                        }
                     }
                 );
-
-
-                var cancelFinished = function () {
-                    deferred.resolve();
-                };
-
-                if(scheduled) {
-                    $window.plugin.notification.local.cancel(notificationId, cancelFinished);
-                }
 
             });
 
