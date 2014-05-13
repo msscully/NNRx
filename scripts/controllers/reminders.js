@@ -1,7 +1,7 @@
-app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$routeParams', 'reminderStorage', 'uuid4', '$window', 'CordovaService', 'localNotifications', 'dialogs', function ($scope, $rootScope, $q, $location, $routeParams, reminderStorage, uuid4, $window, CordovaService, localNotifications, dialogs) {
+app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$routeParams', 'reminderStorage', '$window', 'CordovaService', 'localNotifications', 'dialogs', function ($scope, $rootScope, $q, $location, $routeParams, reminderStorage, $window, CordovaService, localNotifications, dialogs) {
     CordovaService.ready.then(function() {
         'use strict';
-        
+
         var reminders = $scope.reminders = reminderStorage.all();
 
         if ($routeParams.reminderId) {
@@ -51,7 +51,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                         }
                 ));
             } else {
-                $scope.reminder.id = uuid4.generate();
+                $scope.reminder.id = reminderStorage.nextId();
                 $scope.addLocalNotification($scope.reminder).then(
                     function(notificationIds) {
                         $scope.reminder.notificationIds = notificationIds;
@@ -89,24 +89,24 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                 expectedLength += 1;
 
                 var r = {
-                    id:         uuid4.generate(),
+                    id:         reminderStorage.nextId(),
                     title:      reminder.name,
                     message:    reminder.message,
                     json:       JSON.stringify({ id: reminder.id, second: true}),
                     date:       reminder.secondDate,
-                    autoCancel: true,
+                    autoCancel: false,
                     repeat:     repeatInterval,
                 };
                 localNotifications.add(r).then(function(id) {  addId(id); });
             }
 
             var r2 = {
-                id:         uuid4.generate(),
+                id:         reminderStorage.nextId(),
                 title:      reminder.name,
                 message:    reminder.message,
                 json:       JSON.stringify({ id: reminder.id, second: false }),
                 date:       reminder.date,
-                autoCancel: true,
+                autoCancel: false,
                 repeat:     repeatInterval,
             };
             localNotifications.add(r2).then(function(id) {  addId(id); });
@@ -176,14 +176,14 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             var reminderId = JSON.parse(json).id;
             var reminder = reminders[reminderId];
             $scope.cancelNotification(notificationId).then(
-                function() { 
+                function() {
                     if (! JSON.parse(json).snooze) {
                         // add updated reminder
                         var newNotification = {
-                            id:         uuid4.generate(),
+                            id:         reminderStorage.nextId(),
                             title:      reminder.name,
                             message:    reminder.message,
-                            autoCancel: true,
+                            autoCancel: false,
                         };
                         var reminderDate = new Date();
                         if (reminder.freq === 'daily' || reminder.freq === 'twiceDaily') {
@@ -260,11 +260,11 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                 console.log("previous time: " + reminder.date);
                 console.log("in future: " + fiveMinInFuture.toUTCString());
                 var snoozeNotification = {
-                    id:         uuid4.generate(),
+                    id:         reminderStorage.nextId(),
                     title:      reminder.name,
                     message:    reminder.message,
                     date:       fiveMinInFuture,
-                    autoCancel: true,
+                    autoCancel: false,
                     json:       JSON.stringify({ id: reminderId, second: JSON.parse(json).id, snooze: true}),
                 };
 
@@ -289,7 +289,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
         // Triggered when a local notification is clicked on
         $scope.$on("localOnClick",
-                   function(event, data) { 
+                   function(event, data) {
                        $rootScope.safeApply($scope.handleNotification(data.id, data.state, data.json));
                    });
 
