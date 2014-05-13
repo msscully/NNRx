@@ -28,6 +28,26 @@ app.service('dialogs', ['$q', 'CordovaService', function ($q, CordovaService) {
 
             return deferred.promise;
         },
+
+        alert: function(message, title, buttonName) {
+            var deferred = $q.defer();
+
+            var notificationAlert = function() {
+                deferred.resolve();
+            };
+
+            CordovaService.ready.then(function() {
+                navigator.notification.alert(
+                    message,
+                    notificationAlert,
+                    title,
+                    buttonName
+                );
+            });
+
+            return deferred.promise;
+        },
+
     };
 
     return service;

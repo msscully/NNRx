@@ -231,3 +231,15 @@ body {
   width: 100%;
   display: block;
 }
+
+.topcoat-text-input:invalid {
+  border: 1px solid #9daca9;
+}
+
+#add-reminder-form-inputs .has-error {
+  border: 1px solid red;
+}
+
+.error-text {
+  color: red;
+}

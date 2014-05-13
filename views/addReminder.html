@@ -17,13 +17,13 @@
 <button class="topcoat-button--cta delete-reminder-button" ng-click="checkDelete()" ng-show="editing" ng-cloak >Delete</button>
 
 <div ng-controller="ReminderCtrl" ng-cloak>
-  <form class="add-reminder-form" ng-submit="submitForm()">
+  <form novalidate class="add-reminder-form" ng-submit="submitForm()" name="addReminderForm" >
     <div id="add-reminder-form-inputs">
-      <label>Name: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder name" ng-model="reminder.name" required /></label>
+      <label>Name: <span class="error-text" ng-show="submitted && addReminderForm.nameField.$error.required"> Required</span><span class="error-text" ng-show="submitted && addReminderForm.nameField.$error.minlength"> Must be at least 3 chars</span><input type="text" name="nameField" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder name" ng-model="reminder.name" ng-required="true" ng-minlength="3" ng-class="{'has-error': submitted && addReminderForm.nameField.$invalid}"/></label>
       <label>Message: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder text" ng-model="reminder.message" /></label>
       <label>
         Schedule:
-        <select ng-model="reminder.freq">
+        <select ng-model="reminder.freq" ng-required="true">
           <option value="semiDaily">Every-Other-Day</option>
           <option value="daily" selected>Daily</option>
           <option value="twiceDaily">Twice a Day</option>
@@ -31,17 +31,19 @@
       </label>
       <label class="topcoat-radio-button" ng-show="reminder.freq == 'semiDaily'" ng-cloak>
         Today:
-        <input type="radio" ng-model="reminder.tomorrow" value='false'/>
-        <div class="topcoat-radio-button__checkmark"></div>
-        Tomorrow:
-        <input type="radio" ng-model="reminder.tomorrow" value='true'/>
+        <input type="radio" name='tomrrow' ng-model="reminder.tomorrow" value='false' checked='true' />
         <div class="topcoat-radio-button__checkmark"></div>
       </label>
-      <label>Time: <input type="time" ng-model="reminder.time" required /></label>
-      <label ng-show="reminder.freq == 'twiceDaily'" ng-cloak>2nd Time: <input type="time" ng-model="reminder.secondTime" /></label>
+      <label class="topcoat-radio-button" ng-show="reminder.freq == 'semiDaily'" ng-cloak>
+        Tomorrow:
+        <input type="radio" name='tomorrow' ng-model="reminder.tomorrow" value='true'/>
+        <div class="topcoat-radio-button__checkmark"></div>
+      </label>
+      <label>Time: <input name="timeField" type="time" ng-model="reminder.time" ng-required="true" ng-class="{'has-error': submitted && addReminderForm.timeField.$error.required}"/><span class="error-text" ng-show="submitted && addReminderForm.timeField.$error.required"> Required</span></label>
+      <label ng-show="reminder.freq == 'twiceDaily'" ng-cloak>2nd Time: <input name="secondTimeField" type="time" ng-model="reminder.secondTime" ng-required="reminder.freq == 'twiceDaily'" ng-class="{'has-error': submitted && addReminderForm.secondTimeField.$error.required}" /><span class="error-text" ng-show="submitted && addReminderForm.secondTimeField.$error.required"> Required</span></label>
     </div>
     <div id="add-reminder-form-controls">
-      <button type="submit" class="topcoat-button--cta save-reminder-button">Save</button>
+      <button type="submit" class="topcoat-button--cta save-reminder-button" >Save</button>
       <button type="reset" class="topcoat-button--cta cancel-reminder-button" ng-click="back()">Cancel</button>
     </div>
   </form>
