@@ -1,10 +1,12 @@
 ## Setup
 ### Create cordova project
 ```cordova create NNRx com.abmigroup.nnrx NNRx```
-```cd NNRx```
 
 ### Clone this repo as 'www':
-``` git clone git@github.com:msscully/NNRx.git www```
+```
+cd NNRx
+git clone git@github.com:msscully/NNRx.git www
+```
 
 ### Install js dependencies
 ``` bower install ```
