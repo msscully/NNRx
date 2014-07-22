@@ -9,6 +9,7 @@ git clone git@github.com:msscully/NNRx.git www
 ```
 
 ### Install js dependencies
+From the www directory install all dependencies present in bower.json:
 ``` bower install ```
 
 ### Add platforms:
