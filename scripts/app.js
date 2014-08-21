@@ -74,6 +74,7 @@ app.run(['$route', 'CordovaService', function($route, CordovaService) {
     CordovaService.ready.then(function() {
         setupRoutes($route);
         FastClick.attach(document.body);
+        navigator.splashscreen.hide();
     });
 
     function setupRoutes($route){
