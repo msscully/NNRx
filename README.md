@@ -8,6 +8,13 @@ cd NNRx
 git clone git@github.com:msscully/NNRx.git www
 ```
 
+### Use the config.xml from the repo
+From the cordova project directory:
+```
+rm config.xml
+ln -s www/config.xml config.xml
+```
+
 ### Install js dependencies
 From the www directory install all dependencies present in bower.json:
 ``` bower install ```
@@ -27,3 +34,6 @@ For each of the required plugins do:
 *org.apache.cordova.device
 *org.apache.cordova.dialogs
 *org.apache.cordova.splashscreen
+
+### Copy the ios splash screens
+```cp www/res/screens/ios/* platforms/ios/NeuroNEXT\ Rx/Resources/splash/```
