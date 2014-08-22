@@ -28,7 +28,7 @@ cordova platform add android
 ### Add required plugins
 For each of the required plugins do:
 ```cordova plugin add <PLUGIN>```
-* com.plugin.datepicker
+* https://github.com/VitaliiBlagodir/cordova-plugin-datepicker
 * de.appplant.cordova.plugin.hidden-statusbar-overlay
 * de.appplant.cordova.plugin.local-notification
 * org.apache.cordova.device
