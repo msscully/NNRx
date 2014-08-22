@@ -28,12 +28,12 @@ cordova platform add android
 ### Add required plugins
 For each of the required plugins do:
 ```cordova plugin add <PLUGIN>```
-*com.plugin.datepicker
-*de.appplant.cordova.plugin.hidden-statusbar-overlay
-*de.appplant.cordova.plugin.local-notification
-*org.apache.cordova.device
-*org.apache.cordova.dialogs
-*org.apache.cordova.splashscreen
+* com.plugin.datepicker
+* de.appplant.cordova.plugin.hidden-statusbar-overlay
+* de.appplant.cordova.plugin.local-notification
+* org.apache.cordova.device
+* org.apache.cordova.dialogs
+* org.apache.cordova.splashscreen
 
 ### Copy the ios splash screens
 ```cp www/res/screens/ios/* platforms/ios/NeuroNEXT\ Rx/Resources/splash/```
