@@ -15,25 +15,24 @@ rm config.xml
 ln -s www/config.xml config.xml
 ```
 
-### Install js dependencies
-From the www directory install all dependencies present in bower.json:
-``` bower install ```
-
 ### Add platforms:
 ```
 cordova platform add ios
 cordova platform add android
 ```
 
-### Add required plugins
-For each of the required plugins do:
-```cordova plugin add <PLUGIN>```
-* https://github.com/VitaliiBlagodir/cordova-plugin-datepicker
-* de.appplant.cordova.plugin.hidden-statusbar-overlay
-* de.appplant.cordova.plugin.local-notification
-* org.apache.cordova.device
-* org.apache.cordova.dialogs
-* org.apache.cordova.splashscreen
+### Use the hooks from the repo
+The hooks/after_prepare directory in the repo has two scripts, one will install
+all plugins on all platforms, so this no longer has to be done manually. The
+other script copies the spash screens into the correct ios and android platform
+locations, so this also no longer has to be done manually.
 
-### Copy the ios splash screens
-```cp www/res/screens/ios/* platforms/ios/NeuroNEXT\ Rx/Resources/splash/```
+From the cordova project directory:
+```
+rm -rf hooks
+ln -s www/hooks hooks
+```
+
+### Install js dependencies
+From the www directory install all dependencies present in bower.json:
+``` bower install ```
