@@ -26,7 +26,8 @@
     "json3": "~3.2.6",
     "angular-cookies": "~1.2.14",
     "mobiscroll": "~2.9.5",
-    "angular-gestures": "~0.2.1"
+    "angular-gestures": "~0.2.1",
+    "fastclick": "~1.0.3"
   },
   "resolutions": {
     "angular": "~1.2.0"
