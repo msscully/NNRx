@@ -6,6 +6,7 @@
 app.factory('reminderStorage', ['CordovaService', function (CordovaService) {
     'use strict';
     var STORAGE_ID = 'reminders-nnrx';
+    var NOTIFICATION_STORAGE_ID = 'note2reminder-nnrx';
     var MAXID_ID = 'reminders-nnrx-maxid';
     var maxInt = Math.pow(2,32) - 1;
 
@@ -32,11 +33,23 @@ app.factory('reminderStorage', ['CordovaService', function (CordovaService) {
       return newId;
     };
 
+    var getNotificationIdToReminderId = function() {
+        return JSON.parse(window.localStorage.getItem(NOTIFICATION_STORAGE_ID) || '{}');
+    };
+
+    var setNotificationIdToReminderId = function(notificationIdToReminderId) {
+        window.localStorage.setItem(NOTIFICATION_STORAGE_ID, JSON.stringify(notificationIdToReminderId));
+    };
+
     return {
         all: getAll,
 
         put: putReminders,
 
         nextId: nextId,
+
+        getNotificationIdToReminderId: getNotificationIdToReminderId,
+
+        setNotificationIdToReminderId: setNotificationIdToReminderId,
     };
 }]);

@@ -4,6 +4,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
     $scope.submitted = false;
     var reminders = $scope.reminders = reminderStorage.all();
+    var noteId2ReminderId = $scope.noteId2ReminderId = reminderStorage.getNotificationIdToReminderId();
 
     if ($routeParams.reminderId) {
       $scope.reminder = angular.copy(reminders[$routeParams.reminderId]);
@@ -63,6 +64,9 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             function(newNotificationIds) {
           $scope.reminder.notificationIds = newNotificationIds;
           reminders[$scope.reminder.id] = $scope.reminder;
+          for (var i = 0, len = newNotificationIds.length; i !== len; ++i) {
+              noteId2ReminderId[newNotificationIds[i]] = $scope.reminder.id;
+          }
         }
         ));
       } else {
@@ -71,6 +75,9 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           function(notificationIds) {
           $scope.reminder.notificationIds = notificationIds;
           reminders[$scope.reminder.id] = $scope.reminder;
+          for (var i = 0, len = notificationIds.length; i !== len; ++i) {
+              noteId2ReminderId[notificationIds[i]] = $scope.reminder.id;
+          }
         }
         );
       }
@@ -112,7 +119,9 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           autoCancel: false,
           repeat:     repeatInterval,
         };
-        localNotifications.add(r).then(function(id) {  addId(id); });
+        localNotifications.add(r).then(function(id) {
+            addId(id);
+        });
       }
 
       var r2 = {
@@ -124,7 +133,9 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         autoCancel: false,
         repeat:     repeatInterval,
       };
-      localNotifications.add(r2).then(function(id) {  addId(id); });
+      localNotifications.add(r2).then(function(id) {
+          addId(id);
+      });
 
       return deferred.promise;
     };
@@ -132,6 +143,12 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
     $scope.$watch('reminders', function (newValue, oldValue) {
       if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
         reminderStorage.put(reminders);
+      }
+    }, true);
+
+    $scope.$watch('noteId2ReminderId', function (newValue, oldValue) {
+      if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
+        reminderStorage.setNotificationIdToReminderId(noteId2ReminderId);
       }
     }, true);
 
@@ -166,18 +183,20 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       // Will cancel all notifications associated with a reminder
       var deferred = $q.defer();
       var notificationsToCancel = reminder.notificationIds.length;
-      var decCount = function() {
-        notificationsToCancel -= 1;
+      var decCount = function(notificationId) {
+          delete $scope.noteId2ReminderId[notificationId];
+          //reminderStorage.setNotificationIdToReminderId(noteId2ReminderId);
 
-        if(notificationsToCancel <= 0){
-          deferred.resolve();
-        }
+          notificationsToCancel -= 1;
+
+          if(notificationsToCancel <= 0){
+              deferred.resolve();
+          }
       };
 
-      var i = reminder.notificationIds.length;
-      for (i; i--;) {
+      for (var i = 0, len = reminder.notificationIds.length; i !== len; ++i) {
         console.log('canceling ' + reminder.notificationIds[i]);
-        $scope.cancelNotification(reminder.notificationIds[i]).then( decCount());
+        $scope.cancelNotification(reminder.notificationIds[i]).then( decCount(reminder.notificationIds[i]));
       }
 
       return deferred.promise;
@@ -238,11 +257,14 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
               reminder.notificationIds.push(newNotificationId);
             }
             reminders[reminderId] = reminder;
+            noteId2ReminderId[newNotificationId] = reminder.id;
+            delete noteId2ReminderId[notificationId];
           }
           );
         } else {
           // We don't need to schedule a replacement for the
           // canceled notification
+          console.log('Not adding anything.');
         }
       });
     };
