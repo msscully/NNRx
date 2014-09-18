@@ -247,15 +247,44 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       });
     };
 
+    $scope.displayNiceTime = function (date){
+        // getHours returns the hours in local time zone from 0 to 23
+        var hours = date.getHours();
+        // getMinutes returns the minutes in local time zone from 0 to 59
+        var minutes =  date.getMinutes();
+        var meridiem = " AM";
+
+        // convert to 12-hour time format
+        if (hours > 12) {
+            hours = hours - 12;
+            meridiem = ' PM';
+        }
+        else if (hours === 12) {
+            meridiem = 'PM';
+        }
+        else if (hours === 0){
+            hours = 12;
+        }
+
+        // minutes should always be two digits long
+        if (minutes < 10) {
+            minutes = "0" + minutes.toString();
+        }
+        return hours + ':' + minutes + meridiem;
+    };
+
     $scope.handleNotification = function(notificationId, state, json) {
       var reminderId = JSON.parse(json).id;
       var reminder = $scope.reminder = reminders[reminderId];
       if (!reminder.message) {
         reminder.message = "This message intentionally left blank.";
       }
+      var now = new Date();
+      var nameWithTime = reminder.name + ' at ' + $scope.displayNiceTime(now);
+      var messageWithScheduledTime = reminder.message + '\n\nOriginally Scheduled for ' + reminder.date.toLocaleDateString() + ' at ' + $scope.displayNiceTime(reminder.date);
       dialogs.confirm(
-        reminder.message,  // message
-        reminder.name,            // title
+        messageWithScheduledTime,  // message
+        nameWithTime,            // title
         ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
       ).then( function(buttonIndex) { $scope.alertDismissed(buttonIndex, notificationId, json); });
     };

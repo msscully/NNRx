@@ -9,8 +9,17 @@ app.factory('reminderStorage', ['CordovaService', function (CordovaService) {
     var MAXID_ID = 'reminders-nnrx-maxid';
     var maxInt = Math.pow(2,32) - 1;
 
+    var dateTimeRestorer = function(key, value) {
+        if (key === 'date') {
+            return new Date(value);
+        }
+        else {
+            return value;
+        }
+    };
+
     var getAll = function() {
-        return JSON.parse(window.localStorage.getItem(STORAGE_ID) || '{}');
+        return JSON.parse(window.localStorage.getItem(STORAGE_ID) || '{}', dateTimeRestorer);
     };
 
     var putReminders = function(reminders) {
