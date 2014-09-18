@@ -7,7 +7,7 @@ var pluginlist = [
     "org.apache.cordova.device",
     "https://github.com/VitaliiBlagodir/cordova-plugin-datepicker",
     "de.appplant.cordova.plugin.hidden-statusbar-overlay",
-    "de.appplant.cordova.plugin.local-notification",
+    "https://github.com/msscully/cordova-plugin-local-notifications",
     "https://github.com/msscully/cordova-plugin-dialogs",
     "org.apache.cordova.splashscreen",
 ];
