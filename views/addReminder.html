@@ -19,8 +19,8 @@
 <div ng-controller="ReminderCtrl" ng-cloak>
   <form novalidate class="add-reminder-form" ng-submit="submitForm()" name="addReminderForm" >
     <div id="add-reminder-form-inputs">
-      <label>Name: <span class="error-text" ng-show="submitted && addReminderForm.nameField.$error.required"> Required</span><span class="error-text" ng-show="submitted && addReminderForm.nameField.$error.minlength"> Must be at least 3 chars</span><input type="text" name="nameField" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder name" ng-model="reminder.name" ng-required="true" ng-minlength="3" ng-class="{'has-error': submitted && addReminderForm.nameField.$invalid}"/></label>
-      <label>Message: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder text" ng-model="reminder.message" /></label>
+      <label>Reminder Title: <span class="error-text" ng-show="submitted && addReminderForm.nameField.$error.required"> Required</span><span class="error-text" ng-show="submitted && addReminderForm.nameField.$error.minlength"> Must be at least 3 chars</span><input type="text" name="nameField" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder Title" ng-model="reminder.name" ng-required="true" ng-minlength="3" ng-class="{'has-error': submitted && addReminderForm.nameField.$invalid}"/></label>
+      <label>Reminder Text: <input type="text" class="topcoat-text-input add-reminder-text-input" placeholder="Reminder text" ng-model="reminder.message" /></label>
       <label>
         Schedule:
         <select ng-model="reminder.freq" ng-required="true">
