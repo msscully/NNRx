@@ -75,19 +75,22 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       var deferred = $q.defer();
       var newNotificationIds = [];
       var expectedLength = 1;
-      var repeatInterval = null;
+      var repeatInterval = "daily";
 
       if(reminder.freq == 'daily') {
         repeatInterval = 'daily';
       }
       else {
-        repeatInterval = null;
+        // Should be null, but non-repeating notifications can't be canceled
+        // and don't show up in getTriggeredIds. See issue #16 on this repo
+        // & issue #265 on katzers repo
+        repeatInterval = "daily";
       }
 
       var addId = function(id) {
         newNotificationIds.push(id);
 
-        if(newNotificationIds.length == expectedLength){
+        if(newNotificationIds.length === expectedLength){
           deferred.resolve(newNotificationIds);
         }
       };
@@ -192,11 +195,14 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           if (reminder.freq === 'daily') {
             // new date should be today + 1 day with time set to reminder time
             reminderDate.setDate(reminderDate.getDate() + 1);
-            newNotification.repeatInterval = 'daily';
+            newNotification.repeat = 'daily';
           } else if (reminder.freq === 'semiDaily') {
             // new date is two days from now
             reminderDate.setDate(reminderDate.getDate() + 2);
-            newNotification.repeatInterval = null;
+            // Should be null, but non-repeating notifications can't be canceled
+            // and don't show up in getTriggeredIds. See issue #16 on this repo
+            // & issue #265 on katzers repo
+            newNotification.repeat = "daily";
           }
           var reminderTimeSplit;
 
@@ -326,7 +332,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                // supresses them.
                $scope.$on("localOnTrigger",
                           function(event, data) {
-                            $scope.handleTriggeredNotification(data.id, data.state, data.json);
+                            $rootScope.safeApply($scope.handleTriggeredNotification(data.id, data.state, data.json));
                           });
 
   });
