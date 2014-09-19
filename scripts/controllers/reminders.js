@@ -230,6 +230,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         } else {
           // We don't need to schedule a replacement for the
           // canceled notification
+          delete noteId2ReminderId[notificationId];
           console.log('Not adding anything.');
         }
       });
@@ -299,6 +300,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           date:       fiveMinInFuture,
           autoCancel: false,
           json:       JSON.stringify({ id: reminderId, snooze: true}),
+          repeat:     'hourly'
         };
 
         localNotifications.add(snoozeNotification).then(function(newNotificationId) {
