@@ -50,7 +50,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           $scope.reminder.notificationIds = newNotificationIds;
           reminders[$scope.reminder.id] = $scope.reminder;
           for (var i = 0, len = newNotificationIds.length; i !== len; ++i) {
-              noteId2ReminderId[newNotificationIds[i]] = $scope.reminder.id;
+            noteId2ReminderId[newNotificationIds[i]] = $scope.reminder.id;
           }
         }
         ));
@@ -61,7 +61,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           $scope.reminder.notificationIds = notificationIds;
           reminders[$scope.reminder.id] = $scope.reminder;
           for (var i = 0, len = notificationIds.length; i !== len; ++i) {
-              noteId2ReminderId[notificationIds[i]] = $scope.reminder.id;
+            noteId2ReminderId[notificationIds[i]] = $scope.reminder.id;
           }
         }
         );
@@ -105,7 +105,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         repeat:     repeatInterval,
       };
       localNotifications.add(r2).then(function(id) {
-          addId(id);
+        addId(id);
       });
 
       return deferred.promise;
@@ -155,14 +155,14 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       var deferred = $q.defer();
       var notificationsToCancel = reminder.notificationIds.length;
       var decCount = function(notificationId) {
-          delete noteId2ReminderId[notificationId];
-          //reminderStorage.setNotificationIdToReminderId(noteId2ReminderId);
+        delete noteId2ReminderId[notificationId];
+        //reminderStorage.setNotificationIdToReminderId(noteId2ReminderId);
 
-          notificationsToCancel -= 1;
+        notificationsToCancel -= 1;
 
-          if(notificationsToCancel <= 0){
-              deferred.resolve();
-          }
+        if(notificationsToCancel <= 0){
+          deferred.resolve();
+        }
       };
 
       for (var i = 0, len = reminder.notificationIds.length; i !== len; ++i) {
@@ -236,29 +236,29 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
     };
 
     $scope.displayNiceTime = function (date){
-        // getHours returns the hours in local time zone from 0 to 23
-        var hours = date.getHours();
-        // getMinutes returns the minutes in local time zone from 0 to 59
-        var minutes =  date.getMinutes();
-        var meridiem = " AM";
+      // getHours returns the hours in local time zone from 0 to 23
+      var hours = date.getHours();
+      // getMinutes returns the minutes in local time zone from 0 to 59
+      var minutes =  date.getMinutes();
+      var meridiem = " AM";
 
-        // convert to 12-hour time format
-        if (hours > 12) {
-            hours = hours - 12;
-            meridiem = ' PM';
-        }
-        else if (hours === 12) {
-            meridiem = 'PM';
-        }
-        else if (hours === 0){
-            hours = 12;
-        }
+      // convert to 12-hour time format
+      if (hours > 12) {
+        hours = hours - 12;
+        meridiem = ' PM';
+      }
+      else if (hours === 12) {
+        meridiem = 'PM';
+      }
+      else if (hours === 0){
+        hours = 12;
+      }
 
-        // minutes should always be two digits long
-        if (minutes < 10) {
-            minutes = "0" + minutes.toString();
-        }
-        return hours + ':' + minutes + meridiem;
+      // minutes should always be two digits long
+      if (minutes < 10) {
+        minutes = "0" + minutes.toString();
+      }
+      return hours + ':' + minutes + meridiem;
     };
 
     $scope.handleNotification = function(notificationId, state, json) {
@@ -327,13 +327,13 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
                  $rootScope.safeApply($scope.handleNotification(data.id, data.state, data.json));
                });
 
-               // Triggered when a local notification is triggered. Used to detect if
-               // a notifcation occurs while the app is running, since iOS normally
-               // supresses them.
-               $scope.$on("localOnTrigger",
-                          function(event, data) {
-                            $rootScope.safeApply($scope.handleTriggeredNotification(data.id, data.state, data.json));
-                          });
+    // Triggered when a local notification is triggered. Used to detect if
+    // a notifcation occurs while the app is running, since iOS normally
+    // supresses them.
+    $scope.$on("localOnTrigger",
+               function(event, data) {
+                 $rootScope.safeApply($scope.handleTriggeredNotification(data.id, data.state, data.json));
+               });
 
   });
 }]);
