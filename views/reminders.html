@@ -21,7 +21,6 @@
       </div>
       <div class="reminder-list__info">
         {{ reminder.time | timeFilter }}
-        <span ng-show="reminder.secondTime"> &amp; {{ reminder.secondTime | timeFilter }}</span>
         {{ reminder.freq | freqFilter }}
       </div>
       <div class="reminder-list__message">

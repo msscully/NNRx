@@ -26,7 +26,6 @@
         <select ng-model="reminder.freq" ng-required="true">
           <option value="semiDaily">Every-Other-Day</option>
           <option value="daily" selected>Daily</option>
-          <option value="twiceDaily">Twice a Day</option>
         </select>
       </label>
       <label class="topcoat-radio-button" ng-show="reminder.freq == 'semiDaily'" ng-cloak>
@@ -40,7 +39,6 @@
         <div class="topcoat-radio-button__checkmark"></div>
       </label>
       <label>Time: <input name="timeField" type="time" ng-model="reminder.time" ng-required="true" ng-class="{'has-error': submitted && addReminderForm.timeField.$error.required}"/><span class="error-text" ng-show="submitted && addReminderForm.timeField.$error.required"> Required</span></label>
-      <label ng-show="reminder.freq == 'twiceDaily'" ng-cloak>2nd Time: <input name="secondTimeField" type="time" ng-model="reminder.secondTime" ng-required="reminder.freq == 'twiceDaily'" ng-class="{'has-error': submitted && addReminderForm.secondTimeField.$error.required}" /><span class="error-text" ng-show="submitted && addReminderForm.secondTimeField.$error.required"> Required</span></label>
     </div>
     <div id="add-reminder-form-controls">
       <button type="submit" class="topcoat-button--cta save-reminder-button" >Save</button>

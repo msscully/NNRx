@@ -10,7 +10,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       $scope.reminder = angular.copy(reminders[$routeParams.reminderId]);
       $scope.editing = true;
     } else {
-      $scope.reminder = {name: '', time: '', secondTime: '', freq: 'daily', id: '', message: '', notificationIds: [], tomorrow: 'false'};
+      $scope.reminder = {name: '', time: '', freq: 'daily', id: '', message: '', notificationIds: [], tomorrow: 'false'};
       $scope.editing = false;
     }
 
@@ -32,16 +32,8 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       var reminderDate = new Date();
       // if every-other-day are we supposed to start tomorrow?
       if ($scope.reminder.freq === 'daily') {
-        $scope.reminder.secondTime = '';
-        $scope.reminder.tomorrow = 'false';
-        $scope.reminder.secondDate = null;
-      } else if ($scope.reminder.freq === 'semiDaily') {
-        $scope.reminder.secondTime = '';
-        $scope.reminder.secondDate = null;
-      } else if ($scope.reminder.freq === 'twiceDaily') {
         $scope.reminder.tomorrow = 'false';
       }
-
 
       if ($scope.reminder.tomorrow === 'true') {
         reminderDate.setDate(reminderDate.getDate() + 1);
@@ -50,13 +42,6 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       reminderDate.setHours(reminderTimeSplit[0]);
       reminderDate.setMinutes(reminderTimeSplit[1]);
       $scope.reminder.date = reminderDate;
-      if($scope.reminder.secondTime) {
-        var secondReminderDate = new Date();
-        reminderTimeSplit = $scope.reminder.secondTime.split(':');
-        secondReminderDate.setHours(reminderTimeSplit[0]);
-        secondReminderDate.setMinutes(reminderTimeSplit[1]);
-        $scope.reminder.secondDate = secondReminderDate;
-      }
 
       if ($scope.reminder.notificationIds.length > 0) {
         $scope.cancelReminder($scope.reminder).then(
@@ -86,13 +71,13 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
     $scope.addLocalNotification = function(reminder) {
       console.log('Adding reminder ' + reminder.name);
-      // May have to add 2 reminders for twice-daily
+      console.log(reminder);
       var deferred = $q.defer();
       var newNotificationIds = [];
       var expectedLength = 1;
       var repeatInterval = null;
 
-      if(reminder.freq == 'daily' || reminder.freq =='twiceDaily') {
+      if(reminder.freq == 'daily') {
         repeatInterval = 'daily';
       }
       else {
@@ -107,28 +92,11 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         }
       };
 
-      if (reminder.freq == 'twiceDaily') {
-        expectedLength += 1;
-
-        var r = {
-          id:         reminderStorage.nextId(),
-          title:      reminder.name,
-          message:    reminder.message,
-          json:       JSON.stringify({ id: reminder.id, second: true}),
-          date:       reminder.secondDate,
-          autoCancel: false,
-          repeat:     repeatInterval,
-        };
-        localNotifications.add(r).then(function(id) {
-            addId(id);
-        });
-      }
-
       var r2 = {
         id:         reminderStorage.nextId(),
         title:      reminder.name,
         message:    reminder.message,
-        json:       JSON.stringify({ id: reminder.id, second: false }),
+        json:       JSON.stringify({ id: reminder.id}),
         date:       reminder.date,
         autoCancel: false,
         repeat:     repeatInterval,
@@ -221,7 +189,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             autoCancel: false,
           };
           var reminderDate = new Date();
-          if (reminder.freq === 'daily' || reminder.freq === 'twiceDaily') {
+          if (reminder.freq === 'daily') {
             // new date should be today + 1 day with time set to reminder time
             reminderDate.setDate(reminderDate.getDate() + 1);
             newNotification.repeatInterval = 'daily';
@@ -230,24 +198,16 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             reminderDate.setDate(reminderDate.getDate() + 2);
             newNotification.repeatInterval = null;
           }
-          var secondNotification = JSON.parse(json).second;
           var reminderTimeSplit;
 
-          if (secondNotification) {
-            reminderTimeSplit = reminder.secondTime.split(':');
-            reminderDate.setHours(reminderTimeSplit[0]);
-            reminderDate.setMinutes(reminderTimeSplit[1]);
-            reminder.secondDate = reminderDate;
-            newNotification.json=JSON.stringify({ id: reminderId, second: true});
-            newNotification.date = reminder.secondDate;
-          } else {
-            reminderTimeSplit = reminder.time.split(':');
-            reminderDate.setHours(reminderTimeSplit[0]);
-            reminderDate.setMinutes(reminderTimeSplit[1]);
-            reminder.date = reminderDate;
-            newNotification.json=JSON.stringify({ id: reminderId, second: false});
-            newNotification.date = reminder.date;
-          }
+          reminderTimeSplit = reminder.time.split(':');
+          reminderDate.setHours(reminderTimeSplit[0]);
+          reminderDate.setMinutes(reminderTimeSplit[1]);
+          reminder.date = reminderDate;
+          newNotification.json=JSON.stringify({ id: reminderId});
+          newNotification.date = reminder.date;
+
+          console.log(newNotification);
           localNotifications.add(newNotification).then(
             function(newNotificationId) {
             var index = reminder.notificationIds.indexOf(notificationId);
@@ -332,7 +292,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           message:    reminder.message,
           date:       fiveMinInFuture,
           autoCancel: false,
-          json:       JSON.stringify({ id: reminderId, second: JSON.parse(json).id, snooze: true}),
+          json:       JSON.stringify({ id: reminderId, snooze: true}),
         };
 
         localNotifications.add(snoozeNotification).then(function(newNotificationId) {
