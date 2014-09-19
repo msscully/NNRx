@@ -152,7 +152,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       var deferred = $q.defer();
       var notificationsToCancel = reminder.notificationIds.length;
       var decCount = function(notificationId) {
-          delete $scope.noteId2ReminderId[notificationId];
+          delete noteId2ReminderId[notificationId];
           //reminderStorage.setNotificationIdToReminderId(noteId2ReminderId);
 
           notificationsToCancel -= 1;
@@ -175,8 +175,8 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       // of notifications plugin is released.
       // $window.plugin.notification.local.clear(id);
       // For now, cancel then re-add with date as tomorrow
-      var reminderId = JSON.parse(json).id;
-      var reminder = reminders[reminderId];
+      var reminderId = noteId2ReminderId[notificationId];
+      var reminder = $scope.reminders[reminderId];
 
       $scope.cancelNotification(notificationId).then(
         function() {
@@ -256,7 +256,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
     };
 
     $scope.handleNotification = function(notificationId, state, json) {
-      var reminderId = JSON.parse(json).id;
+      var reminderId = noteId2ReminderId[notificationId];
       var reminder = $scope.reminder = reminders[reminderId];
       if (!reminder.message) {
         reminder.message = "This message intentionally left blank.";
@@ -298,6 +298,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         localNotifications.add(snoozeNotification).then(function(newNotificationId) {
           // Snooze is a one-time thing, so we don't need to track
           // this
+          noteId2ReminderId[newNotificationId] = reminderId;
         });
       }
       // Technically we don't have to clear notifications that were
