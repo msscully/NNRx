@@ -99,9 +99,9 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         id:         reminderStorage.nextId(),
         title:      reminder.name,
         message:    reminder.message,
-        json:       JSON.stringify({ id: reminder.id}),
         date:       reminder.date,
         autoCancel: false,
+        json:       JSON.stringify({ snooze: false}),
         repeat:     repeatInterval,
       };
       localNotifications.add(r2).then(function(id) {
@@ -190,6 +190,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             title:      reminder.name,
             message:    reminder.message,
             autoCancel: false,
+            json:       JSON.stringify({ snooze: false}),
           };
           var reminderDate = new Date();
           if (reminder.freq === 'daily') {
@@ -210,7 +211,6 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           reminderDate.setHours(reminderTimeSplit[0]);
           reminderDate.setMinutes(reminderTimeSplit[1]);
           reminder.date = reminderDate;
-          newNotification.json=JSON.stringify({ id: reminderId});
           newNotification.date = reminder.date;
 
           console.log(newNotification);
@@ -263,19 +263,21 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
     };
 
     $scope.handleNotification = function(notificationId, state, json) {
-      var reminderId = noteId2ReminderId[notificationId];
-      var reminder = $scope.reminder = reminders[reminderId];
-      if (!reminder.message) {
-        reminder.message = "This message intentionally left blank.";
-      }
-      var now = new Date();
-      var nameWithTime = reminder.name + ' at ' + $scope.displayNiceTime(now);
-      var messageWithScheduledTime = reminder.message + '\n\nOriginally Scheduled for ' + reminder.date.toLocaleDateString() + ' at ' + $scope.displayNiceTime(reminder.date);
-      dialogs.confirm(
-        messageWithScheduledTime,  // message
-        nameWithTime,            // title
-        ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
-      ).then( function(buttonIndex) { $scope.alertDismissed(buttonIndex, notificationId, json); });
+      CordovaService.ready.then( function() {
+        var reminderId = $scope.noteId2ReminderId[notificationId];
+        var reminder = $scope.reminder = reminders[reminderId];
+        if (!reminder.message) {
+          reminder.message = "This message intentionally left blank.";
+        }
+        var now = new Date();
+        var nameWithTime = reminder.name + ' at ' + $scope.displayNiceTime(now);
+        var messageWithScheduledTime = reminder.message + '\n\nOriginally Scheduled for ' + reminder.date.toLocaleDateString() + ' at ' + $scope.displayNiceTime(reminder.date);
+        dialogs.confirm(
+          messageWithScheduledTime,  // message
+          nameWithTime,            // title
+          ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
+        ).then( function(buttonIndex) { $scope.alertDismissed(buttonIndex, notificationId, json); });
+      });
     };
 
     $scope.alertDismissed = function(buttonIndex, notificationId, json) {
@@ -287,7 +289,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         // Snooze pressed, add one-time notification for 5min from now.
         var now = new Date().getTime();
         var fiveMinInFuture = new Date(now + 300*1000);
-        var reminderId = JSON.parse(json).id;
+        var reminderId = noteId2ReminderId[notificationId];
         var reminder = reminders[reminderId];
 
         console.log(JSON.stringify(reminder));
@@ -299,7 +301,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
           message:    reminder.message,
           date:       fiveMinInFuture,
           autoCancel: false,
-          json:       JSON.stringify({ id: reminderId, snooze: true}),
+          json:       JSON.stringify({ snooze: true}),
           repeat:     'hourly'
         };
 
