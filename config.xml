@@ -11,7 +11,7 @@
     <content src="index.html" />
     <access origin="*" />
     <preference name="SplashScreen" value="ic_launcher" />
-    <preference name="SplashScreenDelay" value="4000" />
+    <preference name="SplashScreenDelay" value="1000" />
     <platform name="android">
         <icon src="/www/res/icons/android/icon-36-ldpi.png" density="ldpi" />
         <icon src="/www/res/icons/android/icon-48-mdpi.png" density="mdpi" />
