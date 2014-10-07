@@ -35,38 +35,6 @@ app.config(['$routeProvider', function($routeProvider) {
   $routeProviderReference = $routeProvider;
 }]);
 
-app.config(function ($routeProvider) {
-  'use strict';
-  $routeProvider
-  .when('/', {
-    templateUrl: 'views/reminders.html',
-    controller: 'ReminderCtrl'
-  })
-  .when('/addReminder/', {
-    templateUrl: 'views/addReminder.html',
-    controller: 'ReminderCtrl'
-  })
-  .when('/reminders/', {
-    templateUrl: 'views/addReminder.html',
-    controller: 'ReminderCtrl'
-  })
-  .when('/reminders/:reminderId/', {
-    templateUrl: 'views/addReminder.html',
-    controller: 'ReminderCtrl'
-  })
-  .when('/reminders/:reminderId/edit/', {
-    templateUrl: 'views/addReminder.html',
-    controller: 'ReminderCtrl'
-  })
-  .when('/about/', {
-    templateUrl: 'views/about.html',
-    controller: 'MainCtrl'
-  })
-  .otherwise({
-    redirectTo: '/'
-  });
-});
-
 app.run(['$route', 'CordovaService', function($route, CordovaService) {
 
   // when cordova is ready
