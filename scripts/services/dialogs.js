@@ -1,7 +1,7 @@
 /*global angular */
 
 /**
- * Services that persists and retrieves REMINDERs from localStorage
+ * Services that enables interaction with the dialog plugin
  */
 app.service('dialogs', ['$q', 'CordovaService', function ($q, CordovaService) {
   'use strict';

@@ -1,7 +1,7 @@
 /*global angular */
 
 /**
- * Services that persists and retrieves REMINDERs from localStorage
+ * Services that enables interaction with local notifications plugin
  */
 app.service('localNotifications', ['$rootScope', '$q', 'CordovaService', '$window', function ($rootScope, $q, CordovaService, $window) {
   'use strict';
