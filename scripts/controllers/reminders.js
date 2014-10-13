@@ -75,17 +75,12 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       var deferred = $q.defer();
       var newNotificationIds = [];
       var expectedLength = 1;
-      var repeatInterval = "daily";
-
-      if(reminder.freq == 'daily') {
-        repeatInterval = 'daily';
-      }
-      else {
-        // Should be null, but non-repeating notifications can't be canceled
-        // and don't show up in getTriggeredIds. See issue #16 on this repo
-        // & issue #265 on katzers repo
-        repeatInterval = "daily";
-      }
+      // All repeat intervals (except snooze?) will be hourly since repeats are
+      // handled internally and we want the user to be prompted until they
+      // click on a notification.  Also, non-repeating notifications can't be
+      // canceled and don't show up in getTriggeredIds. See issue #16 on this
+      // repo & issue #265 on katzers repo
+      var repeatInterval = "hourly";
 
       var addId = function(id) {
         newNotificationIds.push(id);
@@ -191,19 +186,15 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
             message:    reminder.message,
             autoCancel: false,
             json:       JSON.stringify({ snooze: false}),
+            repeat:     'hourly'
           };
           var reminderDate = new Date();
           if (reminder.freq === 'daily') {
             // new date should be today + 1 day with time set to reminder time
             reminderDate.setDate(reminderDate.getDate() + 1);
-            newNotification.repeat = 'daily';
           } else if (reminder.freq === 'semiDaily') {
             // new date is two days from now
             reminderDate.setDate(reminderDate.getDate() + 2);
-            // Should be null, but non-repeating notifications can't be canceled
-            // and don't show up in getTriggeredIds. See issue #16 on this repo
-            // & issue #265 on katzers repo
-            newNotification.repeat = "daily";
           }
           var reminderTimeSplit;
 
