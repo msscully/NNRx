@@ -2,15 +2,14 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
   CordovaService.ready.then(function() {
     'use strict';
 
+    $scope.reminders = reminderStorage.reminders;
     $scope.submitted = false;
-    var reminders = $scope.reminders = reminderStorage.all();
-    var noteId2ReminderId = $scope.noteId2ReminderId = reminderStorage.getNotificationIdToReminderId();
 
     if ($routeParams.reminderId) {
-      $scope.reminder = angular.copy(reminders[$routeParams.reminderId]);
+      $scope.reminder = angular.copy(reminderStorage.reminders[$routeParams.reminderId]);
       $scope.editing = true;
     } else {
-      $scope.reminder = {name: '', time: '', freq: 'daily', id: '', message: '', notificationIds: [], tomorrow: 'false'};
+      $scope.reminder = {title: '', time: '', freq: 'daily', reminderId: '', message: '', tomorrow: 'false'};
       $scope.editing = false;
     }
 
@@ -30,96 +29,43 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
     $scope.processForm = function() {
       $scope.submitted = false;
       var reminderDate = new Date();
+      var now = new Date();
       // if every-other-day are we supposed to start tomorrow?
       if ($scope.reminder.freq === 'daily') {
         $scope.reminder.tomorrow = 'false';
       }
 
       if ($scope.reminder.tomorrow === 'true') {
-        reminderDate.setDate(reminderDate.getDate() + 1);
+        reminderDate.setDate(now.getDate() + 1);
       }
+
       var reminderTimeSplit = $scope.reminder.time.split(':');
       reminderDate.setHours(reminderTimeSplit[0]);
       reminderDate.setMinutes(reminderTimeSplit[1]);
+
+      var tempDate = new Date(reminderDate);
+      if (reminderDate < now) {
+        if (lastNotification.freq === 'daily') {
+          tempDate.setDate(reminderDate.getDate() + 1);
+        } else {
+          tempDate.setDate(reminderDate.getDate() + 2);
+        }
+      }
+      reminderDate = tempDate;
       $scope.reminder.date = reminderDate;
 
-      if ($scope.reminder.notificationIds.length > 0) {
-        $scope.cancelReminder($scope.reminder).then(
-          $scope.addLocalNotification($scope.reminder).then(
-            function(newNotificationIds) {
-          $scope.reminder.notificationIds = newNotificationIds;
-          reminders[$scope.reminder.id] = $scope.reminder;
-          for (var i = 0, len = newNotificationIds.length; i !== len; ++i) {
-            noteId2ReminderId[newNotificationIds[i]] = $scope.reminder.id;
-          }
-        }
-        ));
+      if (reminderStorage.reminders.hasOwnProperty($scope.reminder.reminderId)) {
+        reminderStorage.deleteReminder($scope.reminder.reminderId, false);
+        reminderStorage.addReminder($scope.reminder);
       } else {
-        $scope.reminder.id = reminderStorage.nextId();
-        $scope.addLocalNotification($scope.reminder).then(
-          function(notificationIds) {
-          $scope.reminder.notificationIds = notificationIds;
-          reminders[$scope.reminder.id] = $scope.reminder;
-          for (var i = 0, len = notificationIds.length; i !== len; ++i) {
-            noteId2ReminderId[notificationIds[i]] = $scope.reminder.id;
-          }
-        }
-        );
+        $scope.reminder.reminderId = reminderStorage.nextId();
+        reminderStorage.addReminder($scope.reminder);
       }
       $scope.back();
     };
 
-    $scope.addLocalNotification = function(reminder) {
-      console.log('Adding reminder ' + reminder.name);
-      console.log(reminder);
-      var deferred = $q.defer();
-      var newNotificationIds = [];
-      var expectedLength = 1;
-      // All repeat intervals (except snooze?) will be hourly since repeats are
-      // handled internally and we want the user to be prompted until they
-      // click on a notification.  Also, non-repeating notifications can't be
-      // canceled and don't show up in getTriggeredIds. See issue #16 on this
-      // repo & issue #265 on katzers repo
-      var repeatInterval = "hourly";
-
-      var addId = function(id) {
-        newNotificationIds.push(id);
-
-        if(newNotificationIds.length === expectedLength){
-          deferred.resolve(newNotificationIds);
-        }
-      };
-
-      var r2 = {
-        id:         reminderStorage.nextId(),
-        title:      reminder.name,
-        message:    reminder.message,
-        date:       reminder.date,
-        autoCancel: false,
-        json:       JSON.stringify({ snooze: false}),
-        repeat:     repeatInterval,
-      };
-      localNotifications.add(r2).then(function(id) {
-        addId(id);
-      });
-
-      return deferred.promise;
-    };
-
-    $scope.$watch('reminders', function (newValue, oldValue) {
-      if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
-        reminderStorage.put(reminders);
-      }
-    }, true);
-
-    $scope.$watch('noteId2ReminderId', function (newValue, oldValue) {
-      if (newValue !== oldValue) { // This prevents unneeded calls to the local storage
-        reminderStorage.setNotificationIdToReminderId(noteId2ReminderId);
-      }
-    }, true);
-
     $scope.checkDelete = function() {
-      var confirmTitle = "Delete " + "\"" + $scope.reminder.name + "\"?";
+      var confirmTitle = "Delete " + "\"" + $scope.reminder.title + "\"?";
       dialogs.confirm(
         "Are you sure? This will delete all future reminders for this event and can't be undone.",
         confirmTitle,
@@ -129,43 +75,12 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
     $scope.deleteReminder = function(buttonIndex) {
       if (buttonIndex === 1) {
-        $scope.cancelReminder($scope.reminder).then(
-          function() {
-
-          delete reminders[$scope.reminder.id];
-          reminderStorage.put(reminders);
+        reminderStorage.deleteReminder($scope.reminder.reminderId)
+        .then( function () {
           $scope.back();
           $rootScope.safeApply();
-        }
-        );
+        });
       }
-    };
-
-    $scope.cancelNotification = function(notificationId) {
-      return localNotifications.cancel(notificationId);
-    };
-
-    $scope.cancelReminder = function(reminder) {
-      // Will cancel all notifications associated with a reminder
-      var deferred = $q.defer();
-      var notificationsToCancel = reminder.notificationIds.length;
-      var decCount = function(notificationId) {
-        delete noteId2ReminderId[notificationId];
-        //reminderStorage.setNotificationIdToReminderId(noteId2ReminderId);
-
-        notificationsToCancel -= 1;
-
-        if(notificationsToCancel <= 0){
-          deferred.resolve();
-        }
-      };
-
-      for (var i = 0, len = reminder.notificationIds.length; i !== len; ++i) {
-        console.log('canceling ' + reminder.notificationIds[i]);
-        $scope.cancelNotification(reminder.notificationIds[i]).then( decCount(reminder.notificationIds[i]));
-      }
-
-      return deferred.promise;
     };
 
     $scope.clearNotification = function(notificationId, json) {
@@ -173,58 +88,15 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       // of notifications plugin is released.
       // $window.plugin.notification.local.clear(id);
       // For now, cancel then re-add with date as tomorrow
-      var reminderId = noteId2ReminderId[notificationId];
-      var reminder = $scope.reminders[reminderId];
-
-      $scope.cancelNotification(notificationId).then(
-        function() {
-        if (! JSON.parse(json).snooze) {
-          // add updated reminder
-          var newNotification = {
-            id:         reminderStorage.nextId(),
-            title:      reminder.name,
-            message:    reminder.message,
-            autoCancel: false,
-            json:       JSON.stringify({ snooze: false}),
-            repeat:     'hourly'
-          };
-          var reminderDate = new Date();
-          if (reminder.freq === 'daily') {
-            // new date should be today + 1 day with time set to reminder time
-            reminderDate.setDate(reminderDate.getDate() + 1);
-          } else if (reminder.freq === 'semiDaily') {
-            // new date is two days from now
-            reminderDate.setDate(reminderDate.getDate() + 2);
-          }
-          var reminderTimeSplit;
-
-          reminderTimeSplit = reminder.time.split(':');
-          reminderDate.setHours(reminderTimeSplit[0]);
-          reminderDate.setMinutes(reminderTimeSplit[1]);
-          reminder.date = reminderDate;
-          newNotification.date = reminder.date;
-
-          console.log(newNotification);
-          localNotifications.add(newNotification).then(
-            function(newNotificationId) {
-            var index = reminder.notificationIds.indexOf(notificationId);
-            if (~index){
-              reminder.notificationIds[index] = newNotificationId;
-            } else {
-              reminder.notificationIds.push(newNotificationId);
-            }
-            reminders[reminderId] = reminder;
-            noteId2ReminderId[newNotificationId] = reminder.id;
-            delete noteId2ReminderId[notificationId];
-          }
-          );
-        } else {
-          // We don't need to schedule a replacement for the
-          // canceled notification
-          delete noteId2ReminderId[notificationId];
-          console.log('Not adding anything.');
-        }
-      });
+      var reminderId = reminderStorage.noteId2ReminderId[notificationId];
+      var reminder = reminderStorage.reminders[reminderId];
+      if (! JSON.parse(json).snooze) {
+        return reminderStorage.cancelAndReschedule(notificationId);
+      } else {
+        // We don't need to schedule a replacement for the
+        // canceled notification
+        return reminderStorage.cancelNotification(notificationId, reminderId);
+      }
     };
 
     $scope.displayNiceTime = function (date){
@@ -255,13 +127,13 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
     $scope.handleNotification = function(notificationId, state, json) {
       CordovaService.ready.then( function() {
-        var reminderId = $scope.noteId2ReminderId[notificationId];
-        var reminder = $scope.reminder = reminders[reminderId];
+        var reminderId = reminderStorage.noteId2ReminderId[notificationId];
+        var reminder = $scope.reminder = reminderStorage.reminders[reminderId];
         if (!reminder.message) {
           reminder.message = "This message intentionally left blank.";
         }
         var now = new Date();
-        var nameWithTime = reminder.name + ' at ' + $scope.displayNiceTime(now);
+        var nameWithTime = reminder.title + ' at ' + $scope.displayNiceTime(now);
         var messageWithScheduledTime = reminder.message + '\n\nOriginally Scheduled for ' + reminder.date.toLocaleDateString() + ' at ' + $scope.displayNiceTime(reminder.date);
         dialogs.confirm(
           messageWithScheduledTime,  // message
@@ -278,17 +150,18 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       // re-added.
       if (buttonIndex === 3) {
         // Snooze pressed, add one-time notification for 5min from now.
+        // TODO: Update to work with new reminderStorage
         var now = new Date().getTime();
         var fiveMinInFuture = new Date(now + 300*1000);
-        var reminderId = noteId2ReminderId[notificationId];
-        var reminder = reminders[reminderId];
+        var reminderId = reminderStorage.noteId2ReminderId[notificationId];
+        var reminder = reminderStorage.reminders[reminderId];
 
         console.log(JSON.stringify(reminder));
         console.log("previous time: " + reminder.date);
         console.log("in future: " + fiveMinInFuture.toUTCString());
         var snoozeNotification = {
           id:         reminderStorage.nextId(),
-          title:      reminder.name,
+          title:      reminder.title,
           message:    reminder.message,
           date:       fiveMinInFuture,
           autoCancel: false,
@@ -299,14 +172,17 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         localNotifications.add(snoozeNotification).then(function(newNotificationId) {
           // Snooze is a one-time thing, so we don't need to track
           // this
-          noteId2ReminderId[newNotificationId] = reminderId;
+          reminderStorage.noteId2ReminderId[newNotificationId] = reminderId;
+          $location.path('/').replace();
+          $rootScope.safeApply();
         });
       }
       // Technically we don't have to clear notifications that were
       // clicked on from outside the app, but it doesn't hurt anything.
-      $scope.clearNotification(notificationId, json);
-      $location.path('/').replace();
-      $rootScope.safeApply();
+      $scope.clearNotification(notificationId, json).then( function() {
+        $location.path('/').replace();
+        $rootScope.safeApply();
+      });
     };
 
     $scope.handleTriggeredNotification = function(notificationId, state, json) {
@@ -315,20 +191,17 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       }
     };
 
+    $scope.$on("localOnClick", function(event, data) {
+      // Triggered when a local notification is clicked on
+      $rootScope.safeApply($scope.handleNotification(data.id, data.state, data.json));
+    });
 
-    // Triggered when a local notification is clicked on
-    $scope.$on("localOnClick",
-               function(event, data) {
-                 $rootScope.safeApply($scope.handleNotification(data.id, data.state, data.json));
-               });
-
-    // Triggered when a local notification is triggered. Used to detect if
-    // a notifcation occurs while the app is running, since iOS normally
-    // supresses them.
-    $scope.$on("localOnTrigger",
-               function(event, data) {
-                 $rootScope.safeApply($scope.handleTriggeredNotification(data.id, data.state, data.json));
-               });
+    $scope.$on("localOnTrigger", function(event, data) {
+      // Triggered when a local notification is triggered. Used to detect if
+      // a notifcation occurs while the app is running, since iOS normally
+      // supresses them.
+      $rootScope.safeApply($scope.handleTriggeredNotification(data.id, data.state, data.json));
+    });
 
   });
 }]);
