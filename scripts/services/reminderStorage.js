@@ -179,6 +179,13 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     });
   };
 
+  var cancelSnooze = function(notificationId) {
+    var reminderId = noteId2ReminderId[notificationId];
+    return cancelNotification(notificationId, reminderId).then( function() {
+      return rebalanceQueues();
+    });
+  };
+
   var scheduleNext = function(reminderId) {
     // TODO: handleSnooze?
     var oldReminder = reminders[reminderId];
@@ -201,10 +208,11 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
       newDate = new Date(lastNotification.date);
     }
 
+    var messageWithScheduledTime = oldReminder.message + '\n\nOriginally Scheduled for ' + lastNotification.date.toLocaleDateString() + ' at ' + displayNiceTime(lastNotification.date);
     var newNotification = {
       id:         nextNotificationId(),
       title:      oldReminder.title,
-      message:    oldReminder.message,
+      message:    messageWithScheduledTime,
       date:       newDate,
       autoCancel: false,
       json:       JSON.stringify({ snooze: false}),
@@ -311,7 +319,92 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     }
   };
 
-  var addSnooze = function (reminderId) {
+  var indexOf = function (element, array, comparer, start, end) {
+    if (array.length === 0)
+        return -1;
+
+    start = start || 0;
+    end = end || array.length;
+    var pivot = (start + end) >> 1;  // should be faster than the above calculation
+
+    var c = comparer(element, array[pivot]);
+    if (end - start <= 1) return c == -1 ? pivot - 1 : pivot;
+
+    switch (c) {
+        case -1: return indexOf(element, array, comparer, start, pivot);
+        case 0: return pivot;
+        case 1: return indexOf(element, array, comparer, pivot, end);
+    }
+  };
+
+  var compare = function(attr) {
+    return function(a, b) {
+      if (a[attr] < b[attr]) return -1;
+      if (a[attr] < b[attr]) return 1;
+        return 0;
+    };
+  };
+
+  var displayNiceTime = function (date){
+      // getHours returns the hours in local time zone from 0 to 23
+      var hours = date.getHours();
+      // getMinutes returns the minutes in local time zone from 0 to 59
+      var minutes =  date.getMinutes();
+      var meridiem = " AM";
+
+      // convert to 12-hour time format
+      if (hours > 12) {
+        hours = hours - 12;
+        meridiem = ' PM';
+      }
+      else if (hours === 12) {
+        meridiem = 'PM';
+      }
+      else if (hours === 0){
+        hours = 12;
+      }
+
+      // minutes should always be two digits long
+      if (minutes < 10) {
+        minutes = "0" + minutes.toString();
+      }
+      return hours + ':' + minutes + meridiem;
+    };
+
+
+  var addSnooze = function (origNotificationId) {
+    var reminderId = noteId2ReminderId[origNotificationId];
+    var now = new Date().getTime();
+    var fiveMinInFuture = new Date(now + 300*1000);
+    var reminder = reminders[reminderId];
+    var index = indexOf({'id': origNotificationId}, reminderQueues[reminderId], compare('id'));
+    var snoozedNotification = reminderQueues[reminderId][index];
+    var messageWithScheduledTime = reminder.message + '\n\nOriginally Scheduled for ' + snoozedNotification.date.toLocaleDateString() + ' at ' + displayNiceTime(snoozedNotification.date);
+    var newNotification = {
+      id:         nextNotificationId(),
+      title:      snoozedNotification.title,
+      message:    messageWithScheduledTime,
+      date:       fiveMinInFuture,
+      autoCancel: false,
+      json:       JSON.stringify({ snooze: true}),
+      repeat:     'hourly'
+    };
+
+    return cancelNotification(origNotificationId, reminderId).then( function() {
+      localNotifications.add(newNotification).then(function () {
+        newNotification.freq = snoozedNotification.freq;
+        newNotification.time = snoozedNotification.time;
+        newNotification.date = fiveMinInFuture;
+        newNotification.reminderId = reminderId;
+        var newIndex = indexOf(newNotification, reminderQueues[reminderId], compare('date')) + 1;
+        reminderQueues[reminderId].splice(newIndex, 0, newNotification);
+        noteId2ReminderId[newNotification.id] = reminderId;
+        putInLocalStorage(NOTE2REMINDER_STORAGE_ID, noteId2ReminderId);
+        putInLocalStorage(QUEUE_STORAGE_ID, reminderQueues);
+
+      });
+    });
+
   };
 
   var nextNotificationId = function() {
@@ -345,6 +438,12 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
   var lastNotification = getLastNotification();
 
+  var getNotification = function(notificationId) {
+    var reminderId = noteId2ReminderId[notificationId];
+    var index = indexOf({'id': notificationId}, reminderQueues[reminderId], compare('id'));
+    return reminderQueues[reminderId][index];
+  };
+
   return {
     reminders: reminders,
 
@@ -363,6 +462,10 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     deleteReminder: deleteReminder,
 
     getTriggeredNotifications: getTriggeredNotifications,
+
+    getNotification: getNotification,
+
+    cancelSnooze: cancelSnooze,
 
   };
 }]);

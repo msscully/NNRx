@@ -95,7 +95,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       } else {
         // We don't need to schedule a replacement for the
         // canceled notification
-        return reminderStorage.cancelNotification(notificationId, reminderId);
+        return reminderStorage.cancelSnooze(notificationId);
       }
     };
 
@@ -134,9 +134,10 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         }
         var now = new Date();
         var nameWithTime = reminder.title + ' at ' + $scope.displayNiceTime(now);
-        var messageWithScheduledTime = reminder.message + '\n\nOriginally Scheduled for ' + reminder.date.toLocaleDateString() + ' at ' + $scope.displayNiceTime(reminder.date);
+        // Notification messages include originally scheduled times
+        var message = reminderStorage.getNotification(notificationId).message;
         dialogs.confirm(
-          messageWithScheduledTime,  // message
+          message,
           nameWithTime,            // title
           ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
         ).then( function(buttonIndex) { $scope.alertDismissed(buttonIndex, notificationId, json); });
@@ -150,29 +151,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       // re-added.
       if (buttonIndex === 3) {
         // Snooze pressed, add one-time notification for 5min from now.
-        // TODO: Update to work with new reminderStorage
-        var now = new Date().getTime();
-        var fiveMinInFuture = new Date(now + 300*1000);
-        var reminderId = reminderStorage.noteId2ReminderId[notificationId];
-        var reminder = reminderStorage.reminders[reminderId];
-
-        console.log(JSON.stringify(reminder));
-        console.log("previous time: " + reminder.date);
-        console.log("in future: " + fiveMinInFuture.toUTCString());
-        var snoozeNotification = {
-          id:         reminderStorage.nextId(),
-          title:      reminder.title,
-          message:    reminder.message,
-          date:       fiveMinInFuture,
-          autoCancel: false,
-          json:       JSON.stringify({ snooze: true}),
-          repeat:     'hourly'
-        };
-
-        localNotifications.add(snoozeNotification).then(function(newNotificationId) {
-          // Snooze is a one-time thing, so we don't need to track
-          // this
-          reminderStorage.noteId2ReminderId[newNotificationId] = reminderId;
+        reminderStorage.addSnooze(notificationId).then( function() {
           $location.path('/').replace();
           $rootScope.safeApply();
         });
