@@ -59,9 +59,20 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         reminderStorage.addReminder($scope.reminder);
       } else {
         $scope.reminder.reminderId = reminderStorage.nextId();
-        reminderStorage.addReminder($scope.reminder);
+        reminderStorage.addReminder($scope.reminder).then( angular.noop, $scope.handleQueueTooShort);
       }
       $scope.back();
+    };
+
+    $scope.handleQueueTooShort = function() {
+      dialogs.alert(
+        "Please delete one before adding another.",
+        "Too many reminders",
+        'Ok'
+      ).then(function() {
+        $scope.back();
+        $rootScope.safeApply();
+      });
     };
 
     $scope.checkDelete = function() {

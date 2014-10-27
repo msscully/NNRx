@@ -76,7 +76,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
   };
 
   var rebalanceQueues = function() {
-    // TODO: Make snooze safe
     var deferred = $q.defer();
     var promises = [];
     var newQueueLength = getNewQueueLength();
@@ -242,10 +241,18 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
   var addReminder = function(reminder) {
     reminders[reminder.reminderId] = reminder;
-    putInLocalStorage(REMINDERS_STORAGE_ID, reminders);
-    // rebalanceQueues will do the right thing for a reminder with nothing in
-    // the queue
-    return rebalanceQueues();
+    var newQueueLength = getNewQueueLength();
+    if (newQueueLength > 1) {
+      putInLocalStorage(REMINDERS_STORAGE_ID, reminders);
+      // rebalanceQueues will do the right thing for a reminder with nothing in
+      // the queue
+      return rebalanceQueues();
+    } else {
+      var deferred = $q.defer();
+      delete reminders[reminder.reminderId];
+      deferred.reject('Queue too short');
+      return deferred.promise;
+    }
   };
 
   var cancelAndReschedule = function(notificationId) {
@@ -370,7 +377,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
       }
       return hours + ':' + minutes + meridiem;
     };
-
 
   var addSnooze = function (origNotificationId) {
     var reminderId = noteId2ReminderId[origNotificationId];
