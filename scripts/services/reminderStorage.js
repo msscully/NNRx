@@ -61,7 +61,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     for (var reminderId in reminders) {
       if (reminders.hasOwnProperty( reminderId )) {
         ++reminderCount;
-        if (reminders[reminderId].repeat === 'daily') {
+        if (reminders[reminderId].freq === 'daily') {
           ++reminderCount;
         }
       }
@@ -80,44 +80,100 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     var deferred = $q.defer();
     var promises = [];
     var newQueueLength = getNewQueueLength();
+    console.log(newQueueLength);
 
-    var allDone = function() {
-      deferred.resolve();
+    var promiseSequence = deferred.promise;
+    deferred.resolve();
+
+    var cancelNoteWithPromise = function(promise, noteId, reminderId) {
+      return promise.then( function() {
+        return cancelNotification(noteId, reminderId);
+      });
     };
 
-    for (var reminderId in reminders) {
+    // Cancel reminders first
+    angular.forEach(reminders, function(value, reminderId) {
+      console.log('Start loop reminderId: ' + reminderId);
       if (reminders.hasOwnProperty( reminderId )) {
-        var singleQueue = reminderQueues[reminderId] || [];
-        if (singleQueue.length !== newQueueLength) {
-          var diff = Math.abs(newQueueLength - singleQueue.length);
-          if (singleQueue.length > newQueueLength) {
-            // Too big
-            // cancel oldest until correct size
-            for (var j = diff-1; j >= 0; --j) {
-              promises.push(cancelNotification(singleQueue[newQueueLength + j].id, reminderId));
-            }
-          } else {
-            // Too small
-            // Schedule more until correct size
-            for (var k = 0; k !== diff; ++k) {
-              promises.push(scheduleNext(reminderId));
+        promiseSequence = promiseSequence.then( function() {
+          console.log('In promise reminderId: ' + reminderId);
+          var indvDefered = $q.defer();
+          indvDefered.resolve();
+          var indvPromiseSeq = indvDefered.promise;
+          var singleQueue = reminderQueues[reminderId] || [];
+          var desiredQueueLength = newQueueLength;
+          if(reminders[reminderId].freq === 'daily') {
+            desiredQueueLength = newQueueLength * 2;
+          }
+          if (singleQueue.length !== desiredQueueLength) {
+            var diff = Math.abs(desiredQueueLength - singleQueue.length);
+            console.log(desiredQueueLength + ' - ' + singleQueue.length);
+            if (singleQueue.length > desiredQueueLength) {
+              console.log('Queue too long!');
+              // Too big
+              // cancel oldest until correct size
+              var initQueueLength = singleQueue.length;
+              for (var j = initQueueLength-1; j >= desiredQueueLength; --j) {
+                indvPromiseSeq = cancelNoteWithPromise(indvPromiseSeq,
+                                                       singleQueue[j].id,
+                                                       reminderId);
+                //indvPromiseSeq = indvPromiseSeq.then( function() {
+                //  return cancelNotification(singleQueue[desiredQueueLength + j].id, reminderId);
+                //});
+              }
+            } else {
+              // Do nothing here, we'll catch it on the next pass
             }
           }
-        }
+        return indvPromiseSeq;
+        });
       }
-    }
+    });
 
-    $q.all(promises).then(allDone);
-    return deferred.promise;
+    angular.forEach(reminders, function(value, reminderId) {
+      if (reminders.hasOwnProperty( reminderId )) {
+        promiseSequence = promiseSequence.then( function() {
+          var indvDefered = $q.defer();
+          indvDefered.resolve();
+          var indvPromiseSeq = indvDefered.promise;
+          var singleQueue = reminderQueues[reminderId] || [];
+          var desiredQueueLength = newQueueLength;
+          if(reminders[reminderId].freq === 'daily') {
+            desiredQueueLength = newQueueLength * 2;
+          }
+          if (singleQueue.length !== desiredQueueLength) {
+            var diff = Math.abs(desiredQueueLength - singleQueue.length);
+            if (singleQueue.length < desiredQueueLength) {
+              // Too small
+              // Schedule more until correct size
+              for (var k = 0; k !== diff; ++k) {
+                indvPromiseSeq = indvPromiseSeq.then( function() {
+                  return scheduleNext(reminderId);
+                });
+              }
+            } else {
+              // TODO: throw an error?
+              // This shouldn't happen
+            }
+          }
+        return indvPromiseSeq;
+        });
+      }
+    });
+    return promiseSequence;
   };
 
   var cancelNotification = function (notificationId, reminderId) {
     return localNotifications.cancel(notificationId).then(function() {
+      console.log('canceling ' + notificationId);
       delete noteId2ReminderId[notificationId];
-      var index = reminderQueues[reminderId].indexOf(notificationId);
-      if (~index){
-        delete reminderQueues[reminderId][index];
+      for (var i=0, len=reminderQueues[reminderId].length; i !== len; ++i) {
+        if (reminderQueues[reminderId].length > 0 && reminderQueues[reminderId][i].id === notificationId) {
+          reminderQueues[reminderId].splice(i, 1);
+          break;
+        }
       }
+
       putInLocalStorage(QUEUE_STORAGE_ID, reminderQueues);
       putInLocalStorage(NOTE2REMINDER_STORAGE_ID, noteId2ReminderId);
     });
@@ -125,9 +181,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
   var scheduleNext = function(reminderId) {
     // TODO: handleSnooze?
-    // TODO: Update to handle the fact that notification and reminder objects aren't the same
-    // TODO: Change loop so that it builds promises, and the next isn't started
-    // until the previous promise returns.
     var oldReminder = reminders[reminderId];
     var lastNotification;
     var newDate;
@@ -146,7 +199,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
       lastNotification = reminders[reminderId];
 
       newDate = new Date(lastNotification.date);
-      newDate.setDate(lastNotification.date.getDate());
     }
 
     var newNotification = {
@@ -162,6 +214,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     // notification if needed.
     // This returns a promise
     return localNotifications.add(newNotification).then( function() {
+      console.log('scheduling ' + newNotification.id);
       newNotification.freq = lastNotification.freq;
       newNotification.time = lastNotification.time;
       newNotification.date = newDate;
@@ -235,7 +288,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
     var singleQueue = reminderQueues[reminderId];
     for (var i = 0, len = singleQueue.length; i !== len; ++i) {
-      console.log('canceling ' + singleQueue[i]);
+      console.log('canceling ' + singleQueue[i].id);
       localNotifications.cancel(singleQueue[i].id).then( decCount(singleQueue[i].id));
     }
 

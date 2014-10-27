@@ -45,7 +45,7 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
       var tempDate = new Date(reminderDate);
       if (reminderDate < now) {
-        if (lastNotification.freq === 'daily') {
+        if ($scope.reminder.freq === 'daily') {
           tempDate.setDate(reminderDate.getDate() + 1);
         } else {
           tempDate.setDate(reminderDate.getDate() + 2);
