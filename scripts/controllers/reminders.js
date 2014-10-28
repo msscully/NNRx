@@ -138,20 +138,24 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
     $scope.handleNotification = function(notificationId, state, json) {
       CordovaService.ready.then( function() {
-        var reminderId = reminderStorage.noteId2ReminderId[notificationId];
-        var reminder = $scope.reminder = reminderStorage.reminders[reminderId];
-        if (!reminder.message) {
-          reminder.message = "This message intentionally left blank.";
+        if (notificationId !== String(reminderStorage.getFinalNotificationId())) {
+          var reminderId = reminderStorage.noteId2ReminderId[notificationId];
+          var reminder = $scope.reminder = reminderStorage.reminders[reminderId];
+          if (!reminder.message) {
+            reminder.message = "This message intentionally left blank.";
+          }
+          var now = new Date();
+          var nameWithTime = reminder.title + ' at ' + $scope.displayNiceTime(now);
+          // Notification messages include originally scheduled times
+          var message = reminderStorage.getNotification(notificationId).message;
+          dialogs.confirm(
+            message,
+            nameWithTime,            // title
+            ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
+          ).then( function(buttonIndex) { $scope.alertDismissed(buttonIndex, notificationId, json); });
+        } else {
+          reminderStorage.clearAndRescheduleFinalNotification();
         }
-        var now = new Date();
-        var nameWithTime = reminder.title + ' at ' + $scope.displayNiceTime(now);
-        // Notification messages include originally scheduled times
-        var message = reminderStorage.getNotification(notificationId).message;
-        dialogs.confirm(
-          message,
-          nameWithTime,            // title
-          ["Took Meds", "Didn't Take Meds", "Snooze"] // buttonNames
-        ).then( function(buttonIndex) { $scope.alertDismissed(buttonIndex, notificationId, json); });
       });
     };
 

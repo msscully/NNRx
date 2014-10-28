@@ -32,7 +32,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
   var NOTE2REMINDER_STORAGE_ID = 'note2reminder-nnrx';
   var QUEUE_STORAGE_ID = 'notification-queue-nnrx';
   var OLDEST_DATE_STORAGE_ID = 'oldest-date-nnrx';
-  var LAST_NOTIFICATION_STORAGE_ID = 'last-notification-nnrx';
+  var FINAL_NOTIFICATION_STORAGE_ID = 'final-notification-nnrx';
 
   var dateTimeRestorer = function(key, value) {
     if (key === 'date') {
@@ -43,6 +43,17 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     }
   };
 
+  var getKeys = function(obj) {
+    var keys = [];
+    var key;
+    for(key in obj){
+      if(obj.hasOwnProperty(key)){
+        keys.push(key);
+      }
+    }
+    return keys.sort();
+  };
+
   var getFromLocalStorage = function(storageKey, defaultValue) {
     return JSON.parse(window.localStorage.getItem(storageKey) || defaultValue, dateTimeRestorer);
   };
@@ -51,9 +62,11 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     window.localStorage.setItem(storageKey, JSON.stringify(value));
   };
 
-  var getLastNotification = function() {
-    return JSON.parse(window.localStorage.getItem(LAST_NOTIFICATION_STORAGE_ID) || '{}', dateTimeRestorer);
+  var getFinalNotification = function() {
+    return JSON.parse(window.localStorage.getItem(FINAL_NOTIFICATION_STORAGE_ID) || "{\"empty\":true}", dateTimeRestorer);
   };
+
+  var finalNotification = getFinalNotification();
 
   var getNewQueueLength = function() {
     var queueLength = 0;
@@ -159,6 +172,11 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
         });
       }
     });
+
+    promiseSequence = promiseSequence.then(function() {
+      return clearAndRescheduleFinalNotification();
+    });
+
     return promiseSequence;
   };
 
@@ -166,6 +184,8 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     return localNotifications.cancel(notificationId).then(function() {
       console.log('canceling ' + notificationId);
       delete noteId2ReminderId[notificationId];
+      //var index = indexOf(notificationId, reminderQueues[reminderId], compare('id'));
+      //reminderQueues[reminderId].splice(index, 1);
       for (var i=0, len=reminderQueues[reminderId].length; i !== len; ++i) {
         if (reminderQueues[reminderId].length > 0 && reminderQueues[reminderId][i].id === notificationId) {
           reminderQueues[reminderId].splice(i, 1);
@@ -235,7 +255,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
   var addNotification = function(newNotification) {
     localNotifications.add(newNotification).then( function() {
-      // TODO: Update lastNotification
+      // TODO: Update finalNotification
     });
   };
 
@@ -271,8 +291,46 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
         }
         putInLocalStorage(QUEUE_STORAGE_ID, reminderQueues);
         putInLocalStorage(NOTE2REMINDER_STORAGE_ID, noteId2ReminderId);
+        return clearAndRescheduleFinalNotification();
       });
     });
+  };
+
+  var clearAndRescheduleFinalNotification = function() {
+    var newDate = dateOfFinalNotification();
+
+    if (getKeys(reminders).length > 0 ) {
+      if (finalNotification.hasOwnProperty('empty')) {
+        finalNotification = {
+          reminderId:   -1,
+          id:           nextNotificationId(),
+          title:        'WARNING! WARNING! WARNING!',
+          message:      'Use app or lose reminders!',
+          date:         newDate,
+          repeat:       'minutely',
+          autoCancel:   false,
+          json:         JSON.stringify({ snooze: false}),
+        };
+
+        return localNotifications.add(finalNotification).then( function() {
+          finalNotification.date = newDate;
+          putInLocalStorage(FINAL_NOTIFICATION_STORAGE_ID, finalNotification);
+        });
+      } else {
+        return localNotifications.cancel(finalNotification.id).then( function() {
+          finalNotification.id = nextNotificationId();
+          finalNotification.date = newDate;
+          return localNotifications.add(finalNotification).then( function() {
+            finalNotification.date = newDate;
+            putInLocalStorage(FINAL_NOTIFICATION_STORAGE_ID, finalNotification);
+          });
+        });
+      }
+    } else {
+      var defer = $q.defer();
+      defer.resolve();
+      return defer.promise;
+    }
   };
 
   var deleteReminder = function(reminderId, rebalance) {
@@ -293,6 +351,12 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
         putInLocalStorage(REMINDERS_STORAGE_ID, reminders);
         putInLocalStorage(QUEUE_STORAGE_ID, reminderQueues);
         putInLocalStorage(NOTE2REMINDER_STORAGE_ID, noteId2ReminderId);
+        if(getKeys(reminders).length === 0) {
+          localNotifications.cancel(finalNotification.id).then( function() {
+            finalNotification = {empty: true};
+            putInLocalStorage(FINAL_NOTIFICATION_STORAGE_ID, finalNotification);
+          });
+        }
         if (rebalance) {
           rebalanceQueues().then(deferred.resolve);
         } else {
@@ -407,7 +471,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
         noteId2ReminderId[newNotification.id] = reminderId;
         putInLocalStorage(NOTE2REMINDER_STORAGE_ID, noteId2ReminderId);
         putInLocalStorage(QUEUE_STORAGE_ID, reminderQueues);
-
+        return clearAndRescheduleFinalNotification();
       });
     });
 
@@ -441,19 +505,39 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
   var noteId2ReminderId = getFromLocalStorage(NOTE2REMINDER_STORAGE_ID, '{}');
 
-
-  var lastNotification = getLastNotification();
-
   var getNotification = function(notificationId) {
     var reminderId = noteId2ReminderId[notificationId];
     var index = indexOf({'id': notificationId}, reminderQueues[reminderId], compare('id'));
     return reminderQueues[reminderId][index];
   };
 
+  var dateOfFinalNotification = function() {
+    var now = new Date();
+    var finalDate = new Date();
+    finalDate.setDate(now.getDate() + 1000);
+    angular.forEach(reminderQueues, function(queue, reminderId) {
+      if (reminderId != finalNotification.reminderId) {
+        var reminder = queue[queue.length-1];
+        finalDate = reminder.date < finalDate ? reminder.date : finalDate;
+      }
+    });
+
+    // Warn people one day before they'll start losing reminders
+    return new Date(finalDate - 1);
+  };
+
+  clearAndRescheduleFinalNotification();
+
+  var getFinalNotificationId = function() {
+    return finalNotification.id;
+  };
+
   return {
     reminders: reminders,
 
     noteId2ReminderId: noteId2ReminderId,
+
+    getFinalNotificationId: getFinalNotificationId,
 
     nextId: nextNotificationId,
 
@@ -472,6 +556,8 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     getNotification: getNotification,
 
     cancelSnooze: cancelSnooze,
+
+    clearAndRescheduleFinalNotification: clearAndRescheduleFinalNotification,
 
   };
 }]);
