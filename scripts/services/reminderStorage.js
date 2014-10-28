@@ -92,7 +92,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     var deferred = $q.defer();
     var promises = [];
     var newQueueLength = getNewQueueLength();
-    console.log(newQueueLength);
 
     var promiseSequence = deferred.promise;
     deferred.resolve();
@@ -105,10 +104,8 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
     // Cancel reminders first
     angular.forEach(reminders, function(value, reminderId) {
-      console.log('Start loop reminderId: ' + reminderId);
       if (reminders.hasOwnProperty( reminderId )) {
         promiseSequence = promiseSequence.then( function() {
-          console.log('In promise reminderId: ' + reminderId);
           var indvDefered = $q.defer();
           indvDefered.resolve();
           var indvPromiseSeq = indvDefered.promise;
@@ -118,10 +115,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
             desiredQueueLength = newQueueLength * 2;
           }
           if (singleQueue.length !== desiredQueueLength) {
-            var diff = Math.abs(desiredQueueLength - singleQueue.length);
-            console.log(desiredQueueLength + ' - ' + singleQueue.length);
             if (singleQueue.length > desiredQueueLength) {
-              console.log('Queue too long!');
               // Too big
               // cancel oldest until correct size
               var initQueueLength = singleQueue.length;
@@ -182,7 +176,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
   var cancelNotification = function (notificationId, reminderId) {
     return localNotifications.cancel(notificationId).then(function() {
-      console.log('canceling ' + notificationId);
       delete noteId2ReminderId[notificationId];
       //var index = indexOf(notificationId, reminderQueues[reminderId], compare('id'));
       //reminderQueues[reminderId].splice(index, 1);
@@ -241,7 +234,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     // notification if needed.
     // This returns a promise
     return localNotifications.add(newNotification).then( function() {
-      console.log('scheduling ' + newNotification.id);
       newNotification.freq = lastNotification.freq;
       newNotification.time = lastNotification.time;
       newNotification.date = newDate;
@@ -367,7 +359,6 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
     var singleQueue = reminderQueues[reminderId];
     for (var i = 0, len = singleQueue.length; i !== len; ++i) {
-      console.log('canceling ' + singleQueue[i].id);
       localNotifications.cancel(singleQueue[i].id).then( decCount(singleQueue[i].id));
     }
 
