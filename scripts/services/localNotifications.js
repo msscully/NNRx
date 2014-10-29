@@ -65,6 +65,7 @@ app.service('localNotifications', ['$rootScope', '$q', 'CordovaService', '$windo
 
   };
 
+
   CordovaService.ready.then(function() {
     $window.plugin.notification.local.onclick = function(id, state, json) {
       // Need to emit an event so controllers can subscribe
@@ -85,6 +86,16 @@ app.service('localNotifications', ['$rootScope', '$q', 'CordovaService', '$windo
         $rootScope.safeApply($rootScope.$broadcast("localOnTrigger", {id: id, state: state, json: json}));
       });
     };
+
+
+   var onResume = function() {
+      CordovaService.ready.then(function() {
+        $rootScope.safeApply($rootScope.$broadcast("onResume"));
+      });
+    };
+
+    document.addEventListener("resume", onResume, false);
+
   });
 
   return service;

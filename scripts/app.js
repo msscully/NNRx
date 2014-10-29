@@ -71,6 +71,10 @@ app.run(['$route', 'CordovaService', function($route, CordovaService) {
       templateUrl: 'views/about.html',
       controller: 'MainCtrl'
     })
+    .when('/outstanding', {
+      templateUrl: 'views/outstandingNotifications.html',
+      controller: 'ReminderCtrl'
+    })
     .otherwise({
       redirectTo: '/'
     });

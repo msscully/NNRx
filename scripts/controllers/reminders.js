@@ -2,8 +2,10 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
   CordovaService.ready.then(function() {
     'use strict';
 
+    $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
     $scope.reminders = reminderStorage.reminders;
     $scope.submitted = false;
+    $scope.enteredViaCallback = false;
 
     if ($routeParams.reminderId) {
       $scope.reminder = angular.copy(reminderStorage.reminders[$routeParams.reminderId]);
@@ -159,6 +161,26 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       });
     };
 
+    $scope.checkForTriggeredNotifications = function() {
+      $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
+      console.log($scope.triggeredNotifications);
+      if ($scope.triggeredNotifications.length > 0) {
+        dialogs.alert(
+          "Please process them.",
+          "There are outstanding reminders!",
+          'Ok'
+        ).then(function() {
+          $scope.go('/outstanding');
+        });
+      }
+    };
+
+    if (!$scope.enteredViaCallback && JSON.parse(window.sessionStorage.getItem('nnrx-check-triggered') || true)) {
+        $scope.checkForTriggeredNotifications();
+        $scope.enteredViaCallback = false;
+        window.sessionStorage.setItem('nnrx-check-triggered', JSON.stringify(false));
+    }
+
     $scope.alertDismissed = function(buttonIndex, notificationId, json) {
       // Notifications are rescheduled the first time the alert is
       // dismissed, even if they choose snooze. All snooze does is add a
@@ -169,13 +191,18 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         reminderStorage.addSnooze(notificationId).then( function() {
           $location.path('/').replace();
           $rootScope.safeApply();
+          $scope.checkForTriggeredNotifications();
         });
       }
       // Technically we don't have to clear notifications that were
       // clicked on from outside the app, but it doesn't hurt anything.
       $scope.clearNotification(notificationId, json).then( function() {
-        $location.path('/').replace();
-        $rootScope.safeApply();
+        $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
+        if ($scope.triggeredNotifications.length <= 0) {
+          // No more triggered notifications so return to reminders
+          $location.path('/').replace();
+          $rootScope.safeApply();
+        }
       });
     };
 
@@ -187,7 +214,10 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
     $scope.$on("localOnClick", function(event, data) {
       // Triggered when a local notification is clicked on
-      $rootScope.safeApply($scope.handleNotification(data.id, data.state, data.json));
+      $rootScope.safeApply(function() {
+        $scope.enteredViaCallback = true;
+        $scope.handleNotification(data.id, data.state, data.json);
+      });
     });
 
     $scope.$on("localOnTrigger", function(event, data) {
@@ -195,6 +225,16 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       // a notifcation occurs while the app is running, since iOS normally
       // supresses them.
       $rootScope.safeApply($scope.handleTriggeredNotification(data.id, data.state, data.json));
+    });
+
+    $scope.$on("onResume", function() {
+      $rootScope.safeApply(function() {
+        if (!$scope.enteredViaCallback) {
+          console.log("resumed");
+          $scope.checkForTriggeredNotifications();
+          window.sessionStorage.setItem('nnrx-check-triggered', JSON.stringify(false));
+        }
+      });
     });
 
   });
