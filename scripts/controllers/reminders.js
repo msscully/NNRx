@@ -163,7 +163,6 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
 
     $scope.checkForTriggeredNotifications = function() {
       $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
-      console.log($scope.triggeredNotifications);
       if ($scope.triggeredNotifications.length > 0) {
         dialogs.alert(
           "Please process them.",
@@ -200,6 +199,9 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
         $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
         if ($scope.triggeredNotifications.length <= 0) {
           // No more triggered notifications so return to reminders
+          if($location.path() === '/outstanding') {
+            window.history.back();
+          }
           $location.path('/').replace();
           $rootScope.safeApply();
         }
@@ -230,7 +232,6 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
     $scope.$on("onResume", function() {
       $rootScope.safeApply(function() {
         if (!$scope.enteredViaCallback) {
-          console.log("resumed");
           $scope.checkForTriggeredNotifications();
           window.sessionStorage.setItem('nnrx-check-triggered', JSON.stringify(false));
         }
