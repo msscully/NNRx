@@ -222,7 +222,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
       newDate = new Date(lastNotification.date);
     }
 
-    var messageWithScheduledTime = oldReminder.message + '\n\nOriginally Scheduled for ' + lastNotification.date.toLocaleDateString() + ' at ' + displayNiceTime(lastNotification.date);
+    var messageWithScheduledTime = oldReminder.message + '\n\nOriginally Scheduled for ' + newDate.toLocaleDateString() + ' at ' + displayNiceTime(lastNotification.date);
     var newNotification = {
       id:         nextNotificationId(),
       title:      oldReminder.title,
@@ -281,7 +281,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
         var singleQueue = reminderQueues[reminderId];
         var index = singleQueue.indexOf(notificationId);
         if (index){
-          reminderQueues[reminderId].splice(index+1, 1);
+          reminderQueues[reminderId].splice(index, 1);
         }
         putInLocalStorage(QUEUE_STORAGE_ID, reminderQueues);
         putInLocalStorage(NOTE2REMINDER_STORAGE_ID, noteId2ReminderId);
@@ -308,6 +308,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
 
         return localNotifications.add(finalNotification).then( function() {
           finalNotification.date = newDate;
+          delete finalNotification.empty;
           putInLocalStorage(FINAL_NOTIFICATION_STORAGE_ID, finalNotification);
         });
       } else {
@@ -407,7 +408,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
   var compare = function(attr) {
     return function(a, b) {
       if (a[attr] < b[attr]) return -1;
-      if (a[attr] < b[attr]) return 1;
+      if (a[attr] > b[attr]) return 1;
         return 0;
     };
   };
@@ -444,7 +445,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
     var fiveMinInFuture = new Date(now + 300*1000);
     var reminder = reminders[reminderId];
     var index = indexOf({'id': origNotificationId}, reminderQueues[reminderId], compare('id'));
-    var snoozedNotification = reminderQueues[reminderId][index+1];
+    var snoozedNotification = reminderQueues[reminderId][index];
     var messageWithScheduledTime = reminder.message + '\n\nOriginally Scheduled for ' + snoozedNotification.date.toLocaleDateString() + ' at ' + displayNiceTime(snoozedNotification.date);
     var newNotification = {
       id:         nextNotificationId(),
@@ -504,7 +505,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
   var getNotification = function(notificationId) {
     var reminderId = noteId2ReminderId[notificationId];
     var index = indexOf({'id': notificationId}, reminderQueues[reminderId], compare('id'));
-    return reminderQueues[reminderId][index+1];
+    return reminderQueues[reminderId][index];
   };
 
   var dateOfFinalNotification = function() {
