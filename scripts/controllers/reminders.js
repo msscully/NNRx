@@ -188,24 +188,32 @@ app.controller('ReminderCtrl', ['$scope', '$rootScope', '$q', '$location', '$rou
       if (buttonIndex === 3) {
         // Snooze pressed, add one-time notification for 5min from now.
         reminderStorage.addSnooze(notificationId).then( function() {
-          $location.path('/').replace();
-          $rootScope.safeApply();
-          $scope.checkForTriggeredNotifications();
+          $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
+          if ($scope.triggeredNotifications.length <= 0) {
+            // No more triggered notifications so return to reminders
+            if($location.path() === '/outstanding') {
+              window.history.back();
+            }
+            $location.path('/').replace();
+            $rootScope.safeApply();
+            $scope.checkForTriggeredNotifications();
+          }
+        });
+      } else {
+        // Technically we don't have to clear notifications that were
+        // clicked on from outside the app, but it doesn't hurt anything.
+        $scope.clearNotification(notificationId, json).then( function() {
+          $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
+          if ($scope.triggeredNotifications.length <= 0) {
+            // No more triggered notifications so return to reminders
+            if($location.path() === '/outstanding') {
+              window.history.back();
+            }
+            $location.path('/').replace();
+            $rootScope.safeApply();
+          }
         });
       }
-      // Technically we don't have to clear notifications that were
-      // clicked on from outside the app, but it doesn't hurt anything.
-      $scope.clearNotification(notificationId, json).then( function() {
-        $scope.triggeredNotifications = reminderStorage.getTriggeredNotifications();
-        if ($scope.triggeredNotifications.length <= 0) {
-          // No more triggered notifications so return to reminders
-          if($location.path() === '/outstanding') {
-            window.history.back();
-          }
-          $location.path('/').replace();
-          $rootScope.safeApply();
-        }
-      });
     };
 
     $scope.handleTriggeredNotification = function(notificationId, state, json) {
