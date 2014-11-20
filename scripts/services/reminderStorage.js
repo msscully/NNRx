@@ -220,7 +220,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
       title:      oldReminder.title,
       message:    messageWithScheduledTime,
       date:       newDate,
-      autoCancel: true,
+      autoCancel: false,
       json:       JSON.stringify({ snooze: false}),
       repeat:     'hourly',
     };
@@ -286,7 +286,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
           message:      'Use app or lose reminders!',
           date:         newDate,
           repeat:       'minutely',
-          autoCancel:   true,
+          autoCancel:   false,
           json:         JSON.stringify({ snooze: false}),
         };
 
@@ -447,14 +447,12 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
       title:      snoozedNotification.title,
       message:    messageWithScheduledTime,
       date:       fiveMinInFuture,
-      autoCancel: true,
+      autoCancel: false,
       json:       JSON.stringify({ snooze: true}),
       repeat:     'hourly'
     };
 
-    console.log('canceling id: ' + origNotificationId);
     return cancelNotification(origNotificationId, reminderId).then( function() {
-      console.log('adding snooze with id: ' + newNotificationId);
       return localNotifications.add(newNotification).then(function () {
         newNotification.freq = snoozedNotification.freq;
         newNotification.time = snoozedNotification.time;
@@ -484,7 +482,7 @@ app.factory('reminderStorage', ['CordovaService', 'localNotifications', '$q', fu
    *                title: notification.title,
    *                message: notification.message,
    *                date: notification.date,
-   *                autoCancel: true,
+   *                autoCancel: false,
    *                json: JSON.stringify({ snooze: false}),
    *                repeat: repeatInterval,
    *              }],
