@@ -1,0 +1,33 @@
+<div class="topcoat-navigation-bar">
+  <div ng-controller="MainCtrl" class="topcoat-navigation-bar__item left quarter">
+  </div>
+  <div class="topcoat-navigation-bar__item center half">
+    <h1 class="topcoat-navigation-bar__title">NeuroNEXT Rx</h1>
+  </div>
+  <div ng-controller="MainCtrl" class="topcoat-navigation-bar__item right quarter">
+    <button class="topcoat-icon-button--large strip-button-border" ng-click="go('/about')">
+      <div class="icomatic">question</div>
+    </button>
+  </div>
+</div>
+<button class="topcoat-button--cta add-reminder-button" ng-click="go('/addReminder')">Schedule Event</button>
+<div class="topcoat-list">
+  <h3 class="topcoat-list__header">Events</h3>
+  <div class="reminder row" ng-repeat="(reminderId, reminder) in reminders">
+    <ul class="topcoat-list__container">
+      <li class="topcoat-list__item" ng-click="go('/reminders/' + reminder.id)">
+      <div class="reminder-list__name">
+        <strong>{{ reminder.name | nameFilter }}</strong>
+      </div>
+      <div class="reminder-list__info">
+        {{ reminder.time | timeFilter }}
+        <span ng-show="reminder.secondTime"> &amp; {{ reminder.secondTime | timeFilter }}</span>
+        {{ reminder.freq | freqFilter }}
+      </div>
+      <div class="reminder-list__message">
+        {{ reminder.message }}
+      </div>
+      </li>
+    </ul>
+  </div>
+</div>

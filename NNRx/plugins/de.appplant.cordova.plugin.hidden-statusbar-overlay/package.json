@@ -1,0 +1,23 @@
+{
+    "version": "1.2.0",
+    "name": "de.appplant.cordova.plugin.hidden-statusbar-overlay",
+    "cordova_name": "HiddenStatusbarOverlay",
+    "description": "Cordova 3.x.x plugin to hide the statusbar and overlay on iOS",
+    "license": "Apache 2.0",
+    "repo": "https://github.com/katzer/cordova-plugin-hidden-statusbar-overlay",
+    "keywords": [
+        "statusbar",
+        " status bar",
+        " ios",
+        " overlay"
+    ],
+    "platforms": [
+        "ios"
+    ],
+    "engines": [
+        {
+            "name": "cordova",
+            "version": ">=3.0.0"
+        }
+    ]
+}
